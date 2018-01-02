@@ -4,8 +4,7 @@ Title: Low Coverage Accessibility and Transcriptomics
 Version: 0.0.1
 Author: Lucas T. Graybuck <lucasg@alleninstitute.org>
 Maintainer: Lucas T. Graybuck <lucasg@alleninstitute.org>
-Description: Functions for clustering low-coverage chromatin accessibility 
-data, and for comparisons between accessibility and transcriptomics data.
+Description: Functions for clustering low-coverage chromatin accessibility data, and for comparisons between accessibility and transcriptomics data.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
