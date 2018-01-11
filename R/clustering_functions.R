@@ -209,7 +209,8 @@ time_display <- function(i, n_chunks, start_time) {
   time_units <- units(time_diff)
 
   chunks_left <- n_chunks - i
-  est_time_remain <- time_num*n_chunks/(n_chunks - chunks_left)
+  est_time_per_chunk <- time_num/i
+  est_time_remain <- time_num * chunks_left
 
   time_num <- round(time_num, 2)
   est_time_remain <- round(est_time_remain, 2)
@@ -228,7 +229,8 @@ time_display <- function(i, n_chunks, start_time) {
   time_units <- units(time_diff)
 
   chunks_left <- n_chunks - i
-  est_time_remain <- time_num*n_chunks/(n_chunks - chunks_left)
+  est_time_per_chunk <- time_num/i
+  est_time_remain <- time_num * chunks_left
 
   time_num <- round(time_num, 2)
   est_time_remain <- round(est_time_remain, 2)
