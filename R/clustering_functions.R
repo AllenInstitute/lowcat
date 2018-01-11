@@ -27,7 +27,7 @@ pe_to_frag <- function(bamfile) {
 }
 
 bam_to_fragment_list <- function(bamfiles) {
-  fragment_list <- list()
+  fragment_list <- vector("list",length(bamfiles))
 
   n_files <- length(bamfiles)
 
@@ -50,7 +50,7 @@ downsample_fragments <- function(fragment_list,
                                  discard_if_too_few = TRUE,
                                  seed = 42) {
 
-  out_list <- fragment_list
+  out_list <- vector("list",length(fragment_list))
 
   fragment_counts <- lapply(fragment_list, length)
 
@@ -78,7 +78,7 @@ expand_fragments <- function(fragment_list,
                              width = 1e4,
                              collapse = TRUE) {
 
-  out_list <- list()
+  out_list <- vector("list", length(fragment_list))
   for(i in 1:length(fragment_list)) {
 
     expanded_fragments <- resize(fragment_list[[i]], width = width, fix = "center")
@@ -198,24 +198,64 @@ count_fragment_overlaps <- function(fragment_list,
 
 }
 
+percent_display <- function(i, n_chunks) {
+  paste0(floor(i/n_chunks * 100),"%")
+}
+
+time_display <- function(i, n_chunks, start_time) {
+  current_time <- Sys.time()
+  time_diff <- current_time - start_time
+  time_num <- as.numeric(time_diff)
+  time_units <- units(time_diff)
+
+  chunks_left <- n_chunks - i
+  est_time_remain <- time_num*n_chunks/(n_chunks - chunks_left)
+
+  time_num <- round(time_num, 2)
+  est_time_remain <- round(est_time_remain, 2)
+
+  paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.")
+}
+
+percent_display <- function(i, n_chunks) {
+  paste0(floor(i/n_chunks * 100),"%")
+}
+
+time_display <- function(i, n_chunks, start_time) {
+  current_time <- Sys.time()
+  time_diff <- current_time - start_time
+  time_num <- as.numeric(time_diff)
+  time_units <- units(time_diff)
+
+  chunks_left <- n_chunks - i
+  est_time_remain <- time_num*n_chunks/(n_chunks - chunks_left)
+
+  time_num <- round(time_num, 2)
+  est_time_remain <- round(est_time_remain, 2)
+
+  paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.")
+}
+
 # Parallel Jaccard clustering functions
 clusterApplyLB_chunks <- function(N, n_chunks, cl, FUN, ...) {
   chunk_size <- floor(N / n_chunks)
   chunk_starts <- ((1:n_chunks) - 1) * chunk_size + 1
   chunk_ends   <- c(1:(n_chunks - 1) * chunk_size, N)
 
-  chunk_display <- paste0(floor(seq(100/n_chunks, 100, length.out = n_chunks)),"%")
-
   res <- list()
+
+  start_time <- Sys.time()
 
   for(i in 1:n_chunks) {
     chunk_res <- clusterApplyLB(cl, chunk_starts[i]:chunk_ends[i], FUN, ...)
     res <- c(res, chunk_res)
-    print(chunk_display[i])
+    print(time_display(i, n_chunks, start_time))
   }
 
   res
 }
+
+
 
 pe_to_frag_parallel <- function(N) {
   bam_file <- bam_files[N]
