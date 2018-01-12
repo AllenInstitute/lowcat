@@ -68,9 +68,13 @@ downsample_fragments <- function(fragment_list,
     out_list[[i]] <- sample(fragment_list[[i]], downsample_n)
   }
 
+  names(out_list) <- names(fragment_list)
+
   if(discard_if_too_few) {
     out_list <- out_list[fragment_gt_downsample]
   }
+
+  out_list
 
 }
 
