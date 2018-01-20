@@ -121,7 +121,9 @@ build_pile_plot <- function(gr_list,
                             gr_groups = NULL,
                             group_colors = NULL, #named vector
                             norm = "PM",
-                            max_val) {
+                            max_val,
+                            target_color = "#B7B7B7",
+                            highlight_color = "#F9ED32") {
 
   gr_target <- ucsc_loc_to_gr(ucsc_loc)
   target_start <- start(gr_target)
@@ -136,7 +138,7 @@ build_pile_plot <- function(gr_list,
                             xmax = target_end,
                             ymin = 1,
                             ymax = length(piles) + 1,
-                            fill = "#B7B7B7")
+                            fill = target_color)
 
 
 
@@ -161,7 +163,7 @@ build_pile_plot <- function(gr_list,
                           xmax = hi_end,
                           ymin = 1,
                           ymax = length(piles) + 1,
-                          fill = "#F9ED32")
+                          fill = highlight_color)
 
     pile_plot <- pile_plot +
       geom_rect(data = hi_rect,
