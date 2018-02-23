@@ -1,7 +1,11 @@
-better_rainbow <- function(n_colors) {
+varibow <- function(n_colors) {
   sats <- rep_len(c(0.55,0.7,0.85,1),length.out = n_colors)
   vals <- rep_len(c(1,0.8,0.6),length.out = n_colors)
   sub("FF$","",rainbow(n_colors, s = sats, v = vals))
+}
+
+better_rainbow <- function(...) {
+  varibow(...)
 }
 
 pe_to_frag <- function(bamfile) {
@@ -34,7 +38,8 @@ bam_to_fragment_list <- function(bamfiles) {
   for(i in 1:n_files) {
 
     if(i == 1 | i %% 100 == 0) {
-      print(paste0("Reading ",i," of ",n_files))
+      cat("\r","Reading ",i," of ",n_files)
+      flush.console()
     }
 
     fragment_list[[i]] <- pe_to_frag(bamfiles[i])
@@ -182,7 +187,8 @@ count_fragment_overlaps <- function(fragment_list,
   for(i in 1:length(fragment_list)) {
 
     if(i %% 100 == 0) {
-      print(paste("Counting",i,"of",length(fragment_list)))
+      cat("\r","Counting",i,"of",length(fragment_list))
+      flush.console()
     }
 
     if(binarize) {
@@ -200,26 +206,6 @@ count_fragment_overlaps <- function(fragment_list,
     out_mat
   }
 
-}
-
-percent_display <- function(i, n_chunks) {
-  paste0(floor(i/n_chunks * 100),"%")
-}
-
-time_display <- function(i, n_chunks, start_time) {
-  current_time <- Sys.time()
-  time_diff <- current_time - start_time
-  time_num <- as.numeric(time_diff)
-  time_units <- units(time_diff)
-
-  chunks_left <- n_chunks - i
-  est_time_per_chunk <- time_num/i
-  est_time_remain <- time_num * chunks_left
-
-  time_num <- round(time_num, 2)
-  est_time_remain <- round(est_time_remain, 2)
-
-  paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.")
 }
 
 percent_display <- function(i, n_chunks) {
@@ -256,7 +242,8 @@ clusterApplyLB_chunks <- function(N, n_chunks, cl, FUN, ...) {
   for(i in 1:n_chunks) {
     chunk_res <- clusterApplyLB(cl, chunk_starts[i]:chunk_ends[i], FUN, ...)
     res <- c(res, chunk_res)
-    print(time_display(i, n_chunks, start_time))
+    cat("\r",time_display(i, n_chunks, start_time))
+    flush.console()
   }
 
   res
