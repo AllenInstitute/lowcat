@@ -327,6 +327,8 @@ fragment_overlap_jaccard_parallel <- function(N) {
 run_fragment_overlap_jaccard_parallel <- function(fragment_list,
                                                   n_cores = 6) {
 
+  library(data.table)
+
   index_pairs <- as.data.frame(t(combn(1:length(fragment_list),2)))
 
   # Set up parallelization
@@ -355,7 +357,7 @@ run_fragment_overlap_jaccard_parallel <- function(fragment_list,
 
   stopCluster(cl)
 
-  results <- do.call("rbind",res)
+  results <- rbindlist(res)
 
 
 }
@@ -403,6 +405,8 @@ window_overlap_jaccard_parallel <- function(N) {
 run_window_overlap_jaccard_parallel <- function(window_list,
                                                 n_cores = 6) {
 
+  library(data.frame)
+
   index_pairs <- as.data.frame(t(combn(1:length(window_list),2)))
 
   # Set up parallelization
@@ -431,7 +435,7 @@ run_window_overlap_jaccard_parallel <- function(window_list,
 
   stopCluster(cl)
 
-  results <- do.call("rbind",res)
+  results <- rbindlist(res)
 
 
 }
