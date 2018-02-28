@@ -66,13 +66,18 @@ merge_bam_files <- function(bam_files,
   if(sort_out_file | index_out_file) {
     print(paste0("Sorting ",out_file,". (Required for indexing)"))
     out <- bamReader(out_file)
-    bamSort(out, prefix = sub(".bam$","",out_file))
+    bamSort(out, prefix = sub(".bam$",".srt",out_file))
+    bamClose(out)
+
+    file.remove(out_file)
+    file.rename(sub(".bam$",".srt.bam",out_file), out_file)
 
     if(index_out_file) {
+      out <- bamReader(out_file)
       createIndex(out, paste0(out_file,".bai"))
+      bamClose(out)
     }
 
-    bamClose(out)
   }
 
 }
