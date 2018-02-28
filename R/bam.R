@@ -28,7 +28,7 @@ merge_bam_files <- function(bam_files,
 
   # Get header from first file
   bam1 <- bamReader(bam_files[1])
-  header <- getHeader(bam)
+  header <- getHeader(bam1)
   bamClose(bam1)
 
   # Initialize the new file
