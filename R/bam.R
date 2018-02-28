@@ -2,7 +2,8 @@ merge_bam_files <- function(bam_files,
                             out_file,
                             make_indexes = FALSE,
                             sort_out_file = TRUE,
-                            index_out_file = TRUE) {
+                            index_out_file = TRUE,
+                            keep_unsorted = FALSE) {
 
   library(rbamtools)
 
@@ -66,16 +67,28 @@ merge_bam_files <- function(bam_files,
   if(sort_out_file | index_out_file) {
     print(paste0("Sorting ",out_file,". (Required for indexing)"))
     out <- bamReader(out_file)
-    bamSort(out, prefix = sub(".bam$",".srt",out_file))
+    sort_prefix <- sub(".bam$",".srt",out_file)
+    sort_prefix <- sub(".+/","",sort_prefix)
+
+    bamSort(out, prefix = sort_prefix)
     bamClose(out)
 
-    file.remove(out_file)
-    file.rename(sub(".bam$",".srt.bam",out_file), out_file)
+    if(!keep_unsorted) {
+      file.remove(out_file)
+      file.rename(sub(".bam$",".srt.bam",out_file), out_file)
+    }
 
     if(index_out_file) {
-      out <- bamReader(out_file)
-      createIndex(out, paste0(out_file,".bai"))
-      bamClose(out)
+      if(keep_unsorted) {
+        out <- bamReader(sub(".bam$",".srt.bam",out_file))
+        createIndex(out, paste0(sub(".bam$",".srt.bam",out_file),".bai"))
+        bamClose(out)
+      } else {
+        out <- bamReader(out_file)
+        createIndex(out, paste0(out_file,".bai"))
+        bamClose(out)
+      }
+
     }
 
   }
