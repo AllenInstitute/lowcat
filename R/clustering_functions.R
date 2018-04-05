@@ -8,7 +8,7 @@ better_rainbow <- function(...) {
   varibow(...)
 }
 
-pe_to_frag <- function(bamfile) {
+pe_to_frag <- function(bamfile, max_width = NULL) {
   bam <- readGAlignmentPairs(bamfile)
 
   r1_bam <- first(bam)
@@ -27,10 +27,14 @@ pe_to_frag <- function(bamfile) {
   }
 
   fr_bam <- GRanges(seqnames(r1_bam),IRanges(st_bam,en_bam))
+
+  if(!is.null(max_width)) {
+    fr_bam <- fr_bam[width(fr_bam) <= max_width]
+  }
   return(fr_bam)
 }
 
-bam_to_fragment_list <- function(bamfiles) {
+bam_to_fragment_list <- function(bamfiles, max_width = NULL) {
   fragment_list <- vector("list",length(bamfiles))
 
   n_files <- length(bamfiles)
@@ -42,7 +46,7 @@ bam_to_fragment_list <- function(bamfiles) {
       flush.console()
     }
 
-    fragment_list[[i]] <- pe_to_frag(bamfiles[i])
+    fragment_list[[i]] <- pe_to_frag(bamfiles[i], max_width = max_width)
 
     names(fragment_list)[i] <- sub(".+/","",bamfiles[i])
   }
@@ -259,7 +263,8 @@ pe_to_frag_parallel <- function(N) {
 
 run_pe_to_frag_parallel <- function(bam_files,
                                     sample_names = NULL,
-                                    n_cores = 6) {
+                                    n_cores = 6,
+                                    max_width = 2e3) {
   # Set up parallelization
   if(n_cores == "auto") {
     n_cores <- detectCores()
@@ -284,7 +289,8 @@ run_pe_to_frag_parallel <- function(bam_files,
   res <- clusterApplyLB_chunks(N = N,
                                n_chunks = 20,
                                cl = cl,
-                               FUN = pe_to_frag_parallel)
+                               FUN = pe_to_frag_parallel,
+                               max_width = max_width)
 
   stopCluster(cl)
 
