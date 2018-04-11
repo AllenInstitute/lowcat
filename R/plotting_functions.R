@@ -103,17 +103,6 @@ pileup_gr_list <- function(gr_list, gr_target, gr_groups = NULL, norm="PM") {
 
 }
 
-ucsc_loc_to_gr <- function(ucsc_loc) {
-  chr <- sub(":.+","",ucsc_loc)
-  start <- sub(".+:","",sub("-.+","",ucsc_loc))
-  start <- as.numeric(gsub(",","",start))
-  end <- sub(".+-","",ucsc_loc)
-  end <- as.numeric(gsub(",","",end))
-  GRanges(seqnames = chr,
-          IRanges(start,end),
-          strand = "+")
-}
-
 build_pile_plot <- function(gr_list,
                             ucsc_loc,
                             highlight_loc = NULL,

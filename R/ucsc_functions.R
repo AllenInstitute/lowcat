@@ -1,4 +1,14 @@
-get_tss_regions <- function(symbols=NULL,expand=5000,genome="mm10") {
+#' Read TSS regions from the UCSC RefGenes table
+#'
+#' @param symbols A character object with gene symbols to retain. If NULL, will return all genes. Default is NULL.
+#' @param expand Distance from TSS to expand. If a single value is provided, will use this values in both directions.
+#' If two values are provided, they will be used to expand regions in the 5' and 3' direction relative to transcription direction. Default is 5000.
+#' @param genome The genome to use. Default is "mm10".
+#'
+#' @return a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
+get_tss_regions <- function(symbols = NULL,
+                            expand = 5000,
+                            genome = "mm10") {
   library(dplyr)
   library(rtracklayer)
 
@@ -33,8 +43,17 @@ get_tss_regions <- function(symbols=NULL,expand=5000,genome="mm10") {
 
 }
 
-
-get_gene_bodies <- function(symbols=NULL,expand=5000,genome="mm10") {
+#' Read gene body locations from the UCSC RefGenes table
+#'
+#' @param symbols A character object with gene symbols to retain. If NULL, will return all genes. Default is NULL.
+#' @param expand Distance from the ends of the gene bodies to expand. If a single value is provided, will use this values in both directions.
+#' If two values are provided, they will be used to expand regions in the 5' and 3' direction relative to transcription direction. Default is 0.
+#' @param genome The genome to use. Default is "mm10".
+#'
+#' @return a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
+get_gene_bodies <- function(symbols = NULL,
+                            expand = 0,
+                            genome = "mm10") {
   library(dplyr)
   library(rtracklayer)
 
@@ -69,21 +88,20 @@ get_gene_bodies <- function(symbols=NULL,expand=5000,genome="mm10") {
 
 }
 
-
-#' Convert data.frames in BED-like format to GRanges objects
-bed_to_GRanges <- function(bed) {
-  library(rtracklayer)
-
-  gr <- GRanges(seqnames=bed$chr,
-                IRanges(start=bed$start,
-                        end=bed$end),
-                strand=bed$strand,
-                mcols=bed[,c("name","score")])
-
-  return(gr)
-}
-
-get_great_regions <- function(symbols=NULL,minexpand=5000,maxexpand=1e6,genome="mm10") {
+#' Generate regions similar to GREAT based on the UCSC RefGenes table
+#'
+#' GREAT is the [Genomic Regions Enrichment of Annotations Tool](http://great.stanford.edu).
+#'
+#' @param symbols A character object with gene symbols to retain. If NULL, will return all genes. Default is NULL.
+#' @param minexpand Minimum distance from the TSS to expand. This region will be retained even if it overlaps an adjacent gene. Default is 5000.
+#' @param minexpand Maximum distance from the TSS to expand. This region will be bounded by adjacent minimum regions of the nearest gene.
+#' @param genome The genome to use. Default is "mm10".
+#'
+#' @return a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
+get_great_regions <- function(symbols = NULL,
+                              minexpand = 5000,
+                              maxexpand = 1e6,
+                              genome = "mm10") {
   library(dplyr)
   library(rtracklayer)
 
@@ -128,3 +146,40 @@ get_great_regions <- function(symbols=NULL,minexpand=5000,maxexpand=1e6,genome="
   return(tss_windows)
 
 }
+
+
+#' Convert data.frames in BED-like format to GRanges objects
+#'
+#' @param bed A data.frame with columns chr, start, end, name, strand, and score.
+#'
+#' @return A GenomicRanges object
+#'
+bed_to_GRanges <- function(bed) {
+  library(rtracklayer)
+
+  gr <- GRanges(seqnames=bed$chr,
+                IRanges(start=bed$start,
+                        end=bed$end),
+                strand=bed$strand,
+                mcols=bed[,c("name","score")])
+
+  return(gr)
+}
+
+#' Convert UCSC-style genomic locations to a GenomicRegions object.
+#'
+#' @param ucsc_loc A UCSC-like genomic location. Example: "chr1:152,548,974-152,550,854"
+#'
+#' @return a GenomicRanges object for the UCSC location
+#'
+ucsc_loc_to_gr <- function(ucsc_loc) {
+  chr <- sub(":.+","",ucsc_loc)
+  start <- sub(".+:","",sub("-.+","",ucsc_loc))
+  start <- as.numeric(gsub(",","",start))
+  end <- sub(".+-","",ucsc_loc)
+  end <- as.numeric(gsub(",","",end))
+  GRanges(seqnames = chr,
+          IRanges(start,end),
+          strand = "+")
+}
+
