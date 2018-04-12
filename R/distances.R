@@ -74,6 +74,8 @@ run_fragment_overlap_jaccard_parallel <- function(fragment_list,
 
   N <- nrow(index_pairs)
 
+  print(paste("Running",N,"comparisons."))
+
   res <- clusterApplyLB_chunks(N = N,
                                n_chunks = 20,
                                cl = cl,
@@ -81,9 +83,11 @@ run_fragment_overlap_jaccard_parallel <- function(fragment_list,
 
   stopCluster(cl)
 
+  print("Collecting results.")
+
   results <- rbindlist(res)
 
-
+  return(results)
 }
 
 #' Linking function for computing jaccard similarity scores based on window overlaps in parallel.
