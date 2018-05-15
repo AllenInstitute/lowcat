@@ -26,6 +26,19 @@ pe_to_frag <- function(bamfile) {
   return(fr_bam)
 }
 
+#' Read a single-end BAM file as GRanges cut sites based on the 5' end of each read
+#'
+#' @param bamfile The BAM file to read
+#'
+#' @return a GenomicRanges object
+#'
+se_to_cuts <- function(bamfile) {
+  bam <- readGAlignments(bamfile)
+  gr <- GRanges(bam)
+  cuts <- resize(gr, 1, fix = "start")
+  return(cuts)
+}
+
 #' Read multiple paired-end BAM files as a list of GRanges objects
 #'
 #' @param bamfiles A character vector of file locations for the BAM files to read
@@ -319,6 +332,65 @@ run_pe_to_frag_parallel <- function(bam_files,
                                n_chunks = 20,
                                cl = cl,
                                FUN = pe_to_frag_parallel)
+
+  stopCluster(cl)
+
+  if(is.null(sample_names)) {
+    names(res) <- bam_files
+  } else {
+    names(res) <- sample_names
+  }
+
+  res
+
+}
+
+#' Linking function for running se_to_cuts in parallel mode.
+#'
+#' @param N Index of the bam_file to read
+#'
+se_to_cuts_parallel <- function(N) {
+  bam_file <- bam_files[N]
+
+  se_to_cuts(bam_file)
+}
+
+#' Read single-end BAM files to GenomicRanges objects in parallel
+#'
+#' @param bam_files a vector of bam file locations
+#' @param sample_names Sample names. If NULL, will use BAM file names.
+#' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
+#'
+#' @return a list of GenomicRanges objects
+#'
+run_se_to_cuts_parallel <- function(bam_files,
+                                    sample_names = NULL,
+                                    n_cores = 6) {
+  # Set up parallelization
+  if(n_cores == "auto") {
+    n_cores <- detectCores()
+  }
+
+  print(paste("Starting",n_cores,"nodes"))
+
+  cl <- makeCluster(n_cores)
+
+  print("Exporting necessary objects to nodes")
+
+  clusterEvalQ(cl, library(GenomicRanges))
+  clusterEvalQ(cl, library(GenomicAlignments))
+  clusterExport(cl, c("bam_files",
+                      "se_to_cuts",
+                      "se_to_cuts_parallel"),
+                # Use the function's local environment for export
+                envir = environment())
+
+  N <- length(bam_files)
+
+  res <- clusterApplyLB_chunks(N = N,
+                               n_chunks = 20,
+                               cl = cl,
+                               FUN = se_to_cuts_parallel)
 
   stopCluster(cl)
 

@@ -31,7 +31,7 @@ time_display <- function(i, n_chunks, start_time) {
   time_num <- round(time_num, 2)
   est_time_remain <- round(est_time_remain, 2)
 
-  paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.")
+  paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.          ")
 }
 
 #' Run clusterApplyLB across a single variable, N, using chunks with user feedback.
