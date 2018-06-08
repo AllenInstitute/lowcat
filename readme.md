@@ -6,4 +6,6 @@ lowcat is a collection of functions for reading, comparing, clustering, and iden
 single-cell ATAC-seq or other similar, low-coverage chromatin accessibility data.
 
 Install using:
-devtools::install_github("https://github.com/AllenInstitute/lowcat.git")
+```
+devtools::install_github("AllenInstitute/lowcat")
+```
