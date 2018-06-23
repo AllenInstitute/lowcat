@@ -28,7 +28,12 @@ convert_fragment_list <- function(fragment_list, to = c("cuts","footprints")) {
 }
 
 # Pileup reads, fragments, or cuts from a BAM file over target GRanges regions.
-pileup_gr_list <- function(gr_list, gr_target, gr_groups = NULL, norm="PM") {
+pileup_gr_list <- function(gr_list,
+                           gr_target,
+                           gr_groups = NULL,
+                           norm="PM",
+                           window_size = NULL,
+                           window_mode = c("max","mean","median")) {
 
   if(is.null(gr_groups)) {
     gr_groups <- 1
@@ -84,6 +89,30 @@ pileup_gr_list <- function(gr_list, gr_target, gr_groups = NULL, norm="PM") {
 
     }
 
+    if(!is.null(window_size)) {
+      pile <- pile %>%
+        mutate(bin = floor(pos/window_size))
+      if(window_mode == "max") {
+        pile <- pile %>%
+          group_by(bin) %>%
+          summarise(pos = bin[1]*window_size,
+                    val = max(val))
+      } else if(window_mode == "mean") {
+        pile <- pile %>%
+          group_by(bin) %>%
+          summarise(pos = bin[1]*window_size,
+                    val = mean(val))
+      } else if(window_mode == "max") {
+        pile <- pile %>%
+          group_by(bin) %>%
+          summarise(pos = bin[1]*window_size,
+                    val = median(val))
+      }
+
+      pile <- pile %>%
+        select(pos, val)
+    }
+
     if(norm == "PM") {
       m <- sum(unlist(lapply(group_gr,length)))
       pile$val <- pile$val/m*1e6
@@ -110,7 +139,9 @@ build_pile_plot <- function(gr_list,
                             gr_groups = NULL,
                             group_colors = NULL, #named vector
                             norm = "PM",
-                            max_val,
+                            max_val = NULL,
+                            window_size = NULL,
+                            window_mode = c("max","mean","median"),
                             target_color = "#B7B7B7",
                             highlight_color = "#F9ED32") {
 
@@ -121,7 +152,12 @@ build_pile_plot <- function(gr_list,
   start(gr_target) <- start(gr_target) - padding[1]
   end(gr_target) <- end(gr_target) + padding[2]
 
-  piles <- pileup_gr_list(gr_list, gr_target, gr_groups, norm)
+  piles <- pileup_gr_list(gr_list,
+                          gr_target,
+                          gr_groups,
+                          norm,
+                          window_size,
+                          window_mode)
 
   target_rect <- data.frame(xmin = target_start,
                             xmax = target_end,
@@ -162,6 +198,10 @@ build_pile_plot <- function(gr_list,
 
   }
 
+  if(is.null(max_val)) {
+    max_val <- max(unlist(lappy(piles, function(x) max(x$val))))
+  }
+
   for(i in 1:length(piles)) {
     pile <- piles[[i]]
     pile_color <- group_colors[names(group_colors) == names(piles)[i]]
@@ -171,10 +211,21 @@ build_pile_plot <- function(gr_list,
 
     pile$val[pile$val > i + 1] <- i + 1
 
+    baseline <- data.frame(x = min(pile$pos),
+                           xend = max(pile$pos),
+                           y = i,
+                           yend = i,
+                           color = pile_color)
+
     pile_plot <- pile_plot +
+      geom_segment(data = baseline,
+                   aes(x = x, xend = xend,
+                       y = y, yend = y,
+                       color = color),
+                   size = 0.1) +
       geom_ribbon(data = pile,
                   aes(x = pos, ymin = min, ymax = val),
-                  color = pile_color,
+                  color = NA,
                   fill = pile_color)
   }
 
