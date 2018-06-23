@@ -1,5 +1,7 @@
 #' Read TSS regions from the UCSC RefGenes table
 #'
+#' This function requires an internet connection.
+#'
 #' @param symbols A character object with gene symbols to retain. If NULL, will return all genes. Default is NULL.
 #' @param expand Distance from TSS to expand. If a single value is provided, will use this values in both directions.
 #' If two values are provided, they will be used to expand regions in the 5' and 3' direction relative to transcription direction. Default is 5000.
@@ -92,9 +94,13 @@ get_gene_bodies <- function(symbols = NULL,
 #'
 #' GREAT is the [Genomic Regions Enrichment of Annotations Tool](http://great.stanford.edu).
 #'
+#' GREAT regions have a minimum size around the TSS. In the real deal, this is an asymmetrical region (more upstream than downstream), but
+#' in this implementation, the minimum region specified by minexpand is symmetrical. Regions then expand up to the maximum distance or until
+#' they hit the minimum region of an adjacent gene, whichever is smaller.
+#'
 #' @param symbols A character object with gene symbols to retain. If NULL, will return all genes. Default is NULL.
 #' @param minexpand Minimum distance from the TSS to expand. This region will be retained even if it overlaps an adjacent gene. Default is 5000.
-#' @param minexpand Maximum distance from the TSS to expand. This region will be bounded by adjacent minimum regions of the nearest gene.
+#' @param maxexpand Maximum distance from the TSS to expand. This region will be bounded by adjacent minimum regions of the nearest gene.
 #' @param genome The genome to use. Default is "mm10".
 #'
 #' @return a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
