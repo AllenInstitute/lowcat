@@ -12,13 +12,18 @@ get_great_regions(symbols = NULL, minexpand = 5000, maxexpand = 1e+06,
 
 \item{minexpand}{Minimum distance from the TSS to expand. This region will be retained even if it overlaps an adjacent gene. Default is 5000.}
 
-\item{genome}{The genome to use. Default is "mm10".}
+\item{maxexpand}{Maximum distance from the TSS to expand. This region will be bounded by adjacent minimum regions of the nearest gene.}
 
-\item{minexpand}{Maximum distance from the TSS to expand. This region will be bounded by adjacent minimum regions of the nearest gene.}
+\item{genome}{The genome to use. Default is "mm10".}
 }
 \value{
 a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
 }
 \description{
 GREAT is the [Genomic Regions Enrichment of Annotations Tool](http://great.stanford.edu).
+}
+\details{
+GREAT regions have a minimum size around the TSS. In the real deal, this is an asymmetrical region (more upstream than downstream), but
+in this implementation, the minimum region specified by minexpand is symmetrical. Regions then expand up to the maximum distance or until
+they hit the minimum region of an adjacent gene, whichever is smaller.
 }

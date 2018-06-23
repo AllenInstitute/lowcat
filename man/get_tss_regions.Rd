@@ -18,5 +18,5 @@ If two values are provided, they will be used to expand regions in the 5' and 3'
 a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
 }
 \description{
-Read TSS regions from the UCSC RefGenes table
+This function requires an internet connection.
 }
