@@ -165,10 +165,13 @@ build_pile_plot <- function(gr_list,
                             ymax = length(piles) + 1,
                             fill = target_color)
 
+  chr <- as.character(seqnames(gr_target))
 
 
   pile_plot <- ggplot() +
     theme_classic() +
+    scale_x_continuous(chr, expand = c(0,0)) +
+    scale_y_continuous("", expand = c(0,0)) +
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.line.y = element_blank()) +
