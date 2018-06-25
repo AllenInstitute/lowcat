@@ -154,3 +154,21 @@ max_column_correlation <- function(query_mat,
 
   out_df
 }
+
+all_column_correlation <- function(query_mat,
+                                   target_mat,
+                                   method = "pearson") {
+
+  out_mat <- matrix(0, ncol = ncol(target_mat), nrow = nrow(query_mat))
+
+  for(i in 1:ncol(query_mat)) {
+    query_vals <- query_mat[,i]
+    cor_vals <- apply(target_mat, 2, function(x) cor(query_vals, x, method = method))
+
+    out_mat[i,] <- cor_vals
+  }
+
+  out_mat
+
+}
+
