@@ -49,10 +49,44 @@ combine_group_GRanges <- function(fragment_list,
 
 }
 
+compare_GRanges_lists <- function(query_regions,
+                                  target_regions,
+                                  mode = c("counts","coverage"),
+                                  norm = c("query","target","total_coverage")) {
 
-sum_GRanges_coverage <- function(bam_fragments,
-                                 target_regions) {
+  queries <- names(query_regions)
+  targets <- names(target_regions)
+
+  scores <- matrix(0, nrow = length(queries), ncol = length(targets))
+  rownames(scores) <- queries
+  colnames(scores) <- targets
+
+  for(t in seq_along(targets)) {
+    for(q in seq_along(queries)) {
+      if(mode == "counts") {
+        scores[q,t] <- sum(countOverlaps(query_regions[[q]], target_regions[[t]]))
+        if(norm == "query") {
+          scores[q,t] <- scores[q,t] / length(query_regions[[q]])
+        } else if(norm == "target") {
+          scores[q,t] <- scores[q,t] / length(target_regions[[t]])
+        } else if(norm == "total_coverage") {
+          scores[q,t] <- scores[q,t] / (sum(as.numeric(width(reduce(query_regions[[q]])))) + sum(as.numeric(width(reduce(target_regions[[t]])))))
+        }
+      } else if(mode == "coverage") {
+        scores[q,t] <- sum(width(intersect(query_regions[[q]], target_regions[[t]], ignore.strand = TRUE)))
+        if(norm == "query") {
+          scores[q,t] <- scores[q,t] / sum(width(query_regions[[q]]))
+        } else if(norm == "target") {
+          scores[q,t] <- scores[q,t] / sum(width(length(target_regions[[t]])))
+        } else if(norm == "total_coverage") {
+          scores[q,t] <- scores[q,t] / (sum(width(query_regions[[q]])) + sum(width(target_regions[[t]])))
+        }
+      }
 
 
+    }
+  }
+
+  scores
 
 }
