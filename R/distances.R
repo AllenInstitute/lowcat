@@ -45,11 +45,13 @@ fragment_overlap_jaccard_parallel <- function(N) {
 #' @param fragment_list The list object containing GenomicRanges objects.
 #' @param sample_names Sample names. If NULL, will use BAM file names.
 #' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
+#' @param cluster_type EXPERIMENTAL: Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.
 #'
 #' @return a list of GenomicRanges objects
 #'
 run_fragment_overlap_jaccard_parallel <- function(fragment_list,
-                                                  n_cores = 6) {
+                                                  n_cores = 6,
+                                                  cluster_type = "PSOCK") {
 
   library(data.table)
 
@@ -62,15 +64,17 @@ run_fragment_overlap_jaccard_parallel <- function(fragment_list,
 
   print(paste("Starting",n_cores,"clusters"))
 
-  cl <- makeCluster(n_cores)
+  cl <- makeCluster(n_cores, cluster_type)
 
-  print("Exporting necessary objects to clusters")
+  if(cluster_type == "PSOCK") {
+    print("Exporting necessary objects to clusters")
 
-  clusterEvalQ(cl, library(GenomicRanges))
-  clusterExport(cl, c("index_pairs","fragment_list",
-                      "fragment_overlap_jaccard_parallel"),
-                # Use the function's local environment for export
-                envir = environment())
+    clusterEvalQ(cl, library(GenomicRanges))
+    clusterExport(cl, c("index_pairs","fragment_list",
+                        "fragment_overlap_jaccard_parallel"),
+                  # Use the function's local environment for export
+                  envir = environment())
+  }
 
   N <- nrow(index_pairs)
 
