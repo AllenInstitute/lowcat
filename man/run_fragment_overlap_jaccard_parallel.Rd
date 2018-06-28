@@ -4,12 +4,15 @@
 \alias{run_fragment_overlap_jaccard_parallel}
 \title{Compute jaccard similarity values based on GenomicRanges overlaps in parallel.}
 \usage{
-run_fragment_overlap_jaccard_parallel(fragment_list, n_cores = 6)
+run_fragment_overlap_jaccard_parallel(fragment_list, n_cores = 6,
+  cluster_type = "PSOCK")
 }
 \arguments{
 \item{fragment_list}{The list object containing GenomicRanges objects.}
 
 \item{n_cores}{The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.}
+
+\item{cluster_type}{EXPERIMENTAL: Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.}
 
 \item{sample_names}{Sample names. If NULL, will use BAM file names.}
 }
