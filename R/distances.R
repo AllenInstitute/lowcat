@@ -66,15 +66,13 @@ run_fragment_overlap_jaccard_parallel <- function(fragment_list,
 
   cl <- makeCluster(n_cores, cluster_type)
 
-  if(cluster_type == "PSOCK") {
-    print("Exporting necessary objects to clusters")
+  print("Exporting necessary objects to clusters")
 
-    clusterEvalQ(cl, library(GenomicRanges))
-    clusterExport(cl, c("index_pairs","fragment_list",
-                        "fragment_overlap_jaccard_parallel"),
-                  # Use the function's local environment for export
-                  envir = environment())
-  }
+  clusterEvalQ(cl, library(GenomicRanges))
+  clusterExport(cl, c("index_pairs","fragment_list",
+                      "fragment_overlap_jaccard_parallel"),
+                # Use the function's local environment for export
+                envir = environment())
 
   N <- nrow(index_pairs)
 
@@ -92,14 +90,14 @@ run_fragment_overlap_jaccard_parallel <- function(fragment_list,
   # results <- rbindlist(res)
 
   results <- data.frame(s1 = numeric(length = N),
-                        s2 = numeric(),
-                        s1_name = character(),
-                        s2_name = character(),
-                        overlaps = numeric(),
-                        n1 = numeric(),
-                        n2 = numeric(),
-                        jaccard_similarity = numeric(),
-                        jaccard_distance = numeric())
+                        s2 = numeric(length = N),
+                        s1_name = character(length = N),
+                        s2_name = character(length = N),
+                        overlaps = numeric(length = N),
+                        n1 = numeric(length = N),
+                        n2 = numeric(length = N),
+                        jaccard_similarity = numeric(length = N),
+                        jaccard_distance = numeric(length = N))
 
   for(i in seq_along(res)) {
     results[i,] <- res[[i]][1,]
