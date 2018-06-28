@@ -87,21 +87,7 @@ run_fragment_overlap_jaccard_parallel <- function(fragment_list,
 
   print("Collecting results.")
 
-  # results <- rbindlist(res)
-
-  results <- data.frame(s1 = numeric(length = N),
-                        s2 = numeric(length = N),
-                        s1_name = character(length = N),
-                        s2_name = character(length = N),
-                        overlaps = numeric(length = N),
-                        n1 = numeric(length = N),
-                        n2 = numeric(length = N),
-                        jaccard_similarity = numeric(length = N),
-                        jaccard_distance = numeric(length = N))
-
-  for(i in seq_along(res)) {
-    results[i,] <- res[[i]][1,]
-  }
+  results <- rbindlist(res)
 
   return(results)
 }
