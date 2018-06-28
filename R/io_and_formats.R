@@ -125,10 +125,10 @@ expand_fragments <- function(fragment_list,
   out_list <- vector("list", length(fragment_list))
   for(i in 1:length(fragment_list)) {
 
-    expanded_fragments <- resize(fragment_list[[i]], width = width, fix = "center")
+    expanded_fragments <- GenomicRanges::resize(fragment_list[[i]], width = width, fix = "center")
 
     if(collapse) {
-      expanded_fragments <- reduce(expanded_fragments)
+      expanded_fragments <- GenomicRanges::reduce(expanded_fragments)
     }
 
     out_list[[i]] <- expanded_fragments
