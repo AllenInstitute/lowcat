@@ -146,7 +146,7 @@ window_overlap_jaccard_parallel <- function(N) {
 run_window_overlap_jaccard_parallel <- function(window_list,
                                                 n_cores = 6) {
 
-  library(data.frame)
+  library(data.table)
 
   index_pairs <- as.data.frame(t(combn(1:length(window_list),2)))
 
