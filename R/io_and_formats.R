@@ -7,10 +7,10 @@
 pe_to_frag <- function(bamfile) {
   bam <- readGAlignmentPairs(bamfile)
 
-  r1_bam <- first(bam)
+  r1_bam <- GenomicAlignments::first(bam)
   st_r1_bam <- start(r1_bam)
   en_r1_bam <- end(r1_bam)
-  r2_bam <- last(bam)
+  r2_bam <- GenomicAlignments::last(bam)
   st_r2_bam <- start(r2_bam)
   en_r2_bam <- end(r2_bam)
 
