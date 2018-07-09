@@ -6,23 +6,27 @@
 #'
 pe_to_frag <- function(bamfile) {
   bam <- readGAlignmentPairs(bamfile)
+  if(length(bam) > 0) {
+    r1_bam <- GenomicAlignments::first(bam)
+    st_r1_bam <- start(r1_bam)
+    en_r1_bam <- end(r1_bam)
+    r2_bam <- GenomicAlignments::last(bam)
+    st_r2_bam <- start(r2_bam)
+    en_r2_bam <- end(r2_bam)
 
-  r1_bam <- GenomicAlignments::first(bam)
-  st_r1_bam <- start(r1_bam)
-  en_r1_bam <- end(r1_bam)
-  r2_bam <- GenomicAlignments::last(bam)
-  st_r2_bam <- start(r2_bam)
-  en_r2_bam <- end(r2_bam)
+    st_bam <- numeric(length(r1_bam))
+    en_bam <- numeric(length(r1_bam))
 
-  st_bam <- numeric(length(r1_bam))
-  en_bam <- numeric(length(r1_bam))
+    for(j in 1:length(r1_bam)) {
+      st_bam[j] <- min(st_r1_bam[j],st_r2_bam[j])
+      en_bam[j] <- max(en_r1_bam[j],en_r2_bam[j])
+    }
 
-  for(j in 1:length(r1_bam)) {
-    st_bam[j] <- min(st_r1_bam[j],st_r2_bam[j])
-    en_bam[j] <- max(en_r1_bam[j],en_r2_bam[j])
+    fr_bam <- GRanges(seqnames(r1_bam),IRanges(st_bam,en_bam))
+  } else {
+    fr_bam <- GRanges(bam)
   }
 
-  fr_bam <- GRanges(seqnames(r1_bam),IRanges(st_bam,en_bam))
   return(fr_bam)
 }
 
