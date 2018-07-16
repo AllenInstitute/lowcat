@@ -140,7 +140,8 @@ max_column_correlation <- function(query_mat,
 
   out_df <- data.frame(bam_file = colnames(query_mat),
                        max_cor  = 0,
-                       cl = "")
+                       cl = "",
+                       stringsAsFactors = FALSE)
 
   for(i in 1:ncol(query_mat)) {
     query_vals <- query_mat[,i]
