@@ -180,12 +180,12 @@ bed_to_GRanges <- function(bed) {
 #'
 ucsc_loc_to_gr <- function(ucsc_loc) {
   chr <- sub(":.+","",ucsc_loc)
-  start <- sub(".+:","",sub("-.+","",ucsc_loc))
-  start <- as.numeric(gsub(",","",start))
-  end <- sub(".+-","",ucsc_loc)
-  end <- as.numeric(gsub(",","",end))
+  start_pos <- sub(".+:","",sub("-.+","",ucsc_loc))
+  start_pos <- as.numeric(gsub(",","",start_pos))
+  end_pos <- sub(".+-","",ucsc_loc)
+  end_pos <- as.numeric(gsub(",","",end_pos))
   GRanges(seqnames = chr,
-          IRanges(start,end),
+          IRanges(start_pos,end_pos),
           strand = "+")
 }
 
