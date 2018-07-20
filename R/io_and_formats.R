@@ -408,6 +408,14 @@ run_se_to_cuts_parallel <- function(bam_files,
 
 }
 
+#' Merge multiple BAM files to a single output BAM file
+#'
+#' @param bam_files a character vector listing all of the BAM files to merge
+#' @param out_file the target BAM file to write to
+#' @param make_indexes whether or not to make indexes for the input files. Default is FALSE
+#' @param sort_out_file whether or not to sort the output file. default is TRUE, which will force index_out_file to TRUE.
+#' @param index_out_file whether or not to index the output file. Default is TRUE.
+#' @param keep_unsorted If sort_out_file == TRUE, whether or not to keep the original, unsorted file. Default is FALSE.
 merge_bam_files <- function(bam_files,
                             out_file,
                             make_indexes = FALSE,
@@ -504,3 +512,30 @@ merge_bam_files <- function(bam_files,
   }
 
 }
+
+#' Downsample fragments within cluster sets to match the sample with the lowest number of fragments
+#'
+#' @param fragment_list The list object containing GenomicRanges objects.
+#' @param clusters a vector with cluster assignments for each item in fragment_list
+#'
+#' @return a lis of GenomicRanges objects with all members of each cluster downsampled to the
+#' minimum number of reads of all cluster members.
+#'
+balance_fragment_clusters <- function(fragment_list,
+                                      clusters) {
+  unique_clusters <- unique(clusters)
+
+  balanced_fragments <- map(clusters,
+                            function(this_cluster) {
+                              cluster_fragments <- fragment_list[clusters == this_cluster]
+                              min_fragments <- min(map_int(cluster_fragments, length))
+                              cluster_balanced_fragments <- downsample_fragments(cluster_fragments,
+                                                                                 downsample_n = min_fragments)
+                              cluster_balanced_fragments
+                            })
+
+  balanced_fragments <- unlist(balanced_fragments, recursive = F)
+  balanced_fragments <- balanced_fragments[names(fragment_list)]
+
+}
+
