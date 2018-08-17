@@ -234,3 +234,120 @@ build_pile_plot <- function(gr_list,
 
   pile_plot
 }
+
+build_pile_heatmap <- function(gr_list,
+                               ucsc_loc,
+                               highlight_loc = NULL,
+                               padding = c(1e5,1e5),
+                               gr_groups = NULL,
+                               colorset = c("white","black"),
+                               norm = "PM",
+                               max_val = NULL,
+                               window_size = NULL,
+                               window_mode = c("max","mean","median"),
+                               target_color = "#CBF8FF",
+                               highlight_color = "#F9ED32",
+                               baselines = TRUE) {
+
+  gr_target <- ucsc_loc_to_gr(ucsc_loc)
+  target_start <- start(gr_target)
+  target_end <- end(gr_target)
+
+  start(gr_target) <- start(gr_target) - padding[1]
+  end(gr_target) <- end(gr_target) + padding[2]
+
+  piles <- pileup_gr_list(gr_list,
+                          gr_target,
+                          gr_groups,
+                          norm,
+                          window_size,
+                          window_mode)
+
+  target_rect <- data.frame(xmin = target_start,
+                            xmax = target_end,
+                            ymin = 1,
+                            ymax = length(piles) + 1,
+                            fill = target_color)
+
+  chr <- as.character(seqnames(gr_target))
+
+
+  pile_plot <- ggplot() +
+    theme_classic() +
+    scale_x_continuous(chr, expand = c(0,0)) +
+    scale_y_continuous("", expand = c(0,0)) +
+    theme(axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank()) +
+    scale_color_identity() +
+    scale_fill_identity() +
+    geom_rect(data = target_rect,
+              aes(xmin = xmin, xmax = xmax,
+                  ymin = ymin, ymax = ymax,
+                  fill = fill))
+
+  if(!is.null(highlight_loc)) {
+    hi_target <- ucsc_loc_to_gr(highlight_loc)
+    hi_start <- start(hi_target)
+    hi_end <- end(hi_target)
+
+    hi_rect <- data.frame(xmin = hi_start,
+                          xmax = hi_end,
+                          ymin = 1,
+                          ymax = length(piles) + 1,
+                          fill = highlight_color)
+
+    pile_plot <- pile_plot +
+      geom_rect(data = hi_rect,
+                aes(xmin = xmin, xmax = xmax,
+                    ymin = ymin, ymax = ymax,
+                    fill = fill))
+
+  }
+
+  if(is.null(max_val)) {
+    max_val <- max(unlist(lappy(piles, function(x) max(x$val))))
+  }
+
+  for(i in 1:length(piles)) {
+    pile <- piles[[i]]
+    #pile_color <- group_colors[names(group_colors) == names(piles)[i]]
+
+    pile$val <- pile$val / max_val
+
+    baseline <- data.frame(x = min(pile$pos),
+                           xend = max(pile$pos),
+                           y = i,
+                           yend = i,
+                           color = "#000000")
+    pile <- pile %>%
+      filter(val > 0)
+
+    pile$ypos <- i
+
+    pile$color <- values_to_colors(pile$val,
+                                   min_val = 0,
+                                   max_val = 1,
+                                   colorset = colorset)
+
+    if(baselines) {
+      pile_plot <- pile_plot +
+        geom_segment(data = baseline,
+                     aes(x = x, xend = xend,
+                         y = y, yend = y,
+                         color = color),
+                     size = 0.1)
+    }
+
+    pile_plot <- pile_plot +
+      geom_rect(data = pile,
+                aes(xmin = pos,
+                    xmax = pos + window_size,
+                    ymin = ypos + 0.05,
+                    ymax = ypos + 0.95,
+                    fill = color),
+                color = NA)
+  }
+
+  pile_plot
+}
