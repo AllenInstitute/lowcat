@@ -202,7 +202,7 @@ build_pile_plot <- function(gr_list,
   }
 
   if(is.null(max_val)) {
-    max_val <- max(unlist(lappy(piles, function(x) max(x$val))))
+    max_val <- max(unlist(lapply(piles, function(x) max(x$val))))
   }
 
   for(i in 1:length(piles)) {
