@@ -15,3 +15,5 @@ Imports:
     parallel (>= 3.4.3),
     purrr (>= 0.2.4)
 RoxygenNote: 6.0.1
+Suggests: 
+    testthat
