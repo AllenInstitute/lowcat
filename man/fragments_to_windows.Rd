@@ -4,7 +4,8 @@
 \alias{fragments_to_windows}
 \title{Convert a list of GenomicRanges objects to a list of genomic window ids}
 \usage{
-fragments_to_windows(fragment_list, window_size = 10000, collapse = TRUE)
+fragments_to_windows(fragment_list, window_size = 10000,
+  collapse = TRUE)
 }
 \arguments{
 \item{fragment_list}{The list object containing GenomicRanges objects}

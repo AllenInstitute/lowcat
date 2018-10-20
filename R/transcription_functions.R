@@ -134,23 +134,35 @@ region_fragment_count_neighbors <- function(fragment_list,
 
 }
 
+#' Compare matrices to find the maximum correlation of columns
+#'
+#' For each column in the query matrix, max_column_correlation will
+#' find the column in the target matrix with the highest correlation score,
+#' and will return a data.frame with the correlation score and target column name.
+#'
+#' @param query_mat The query matrix
+#' @param target_mat The target matrix
+#' @param method The name of the method to pass to cor(). Can be "pearson", "kendall", or "spearman". Default is "pearson".
+#'
+#' @return a data.frame with 3 columns: query, max_cor, and target.
+#'
 max_column_correlation <- function(query_mat,
                                    target_mat,
                                    method = "pearson") {
 
-  out_df <- data.frame(bam_file = colnames(query_mat),
+  out_df <- data.frame(query = colnames(query_mat),
                        max_cor  = 0,
-                       cl = "",
+                       target = "",
                        stringsAsFactors = FALSE)
 
   for(i in 1:ncol(query_mat)) {
     query_vals <- query_mat[,i]
     cor_vals <- apply(target_mat, 2, function(x) cor(query_vals, x, method = method))
-    max_cor <- max(cor_vals)
-    max_name <- names(cor_vals)[cor_vals == max_cor][1]
+    max_cor <- max(cor_vals, na.rm = TRUE)
+    max_name <- names(cor_vals)[which(cor_vals == max_cor)][1]
 
     out_df$max_cor[i] <- max_cor
-    out_df$cl[i] <- max_name
+    out_df$target[i] <- max_name
   }
 
   out_df
