@@ -5,14 +5,14 @@
 #' @return a GenomicRanges object
 #'
 pe_to_frag <- function(bamfile) {
-  bam <- readGAlignmentPairs(bamfile)
+  bam <- GenomicAlignments::readGAlignmentPairs(bamfile)
   if(length(bam) > 0) {
     r1_bam <- GenomicAlignments::first(bam)
-    st_r1_bam <- start(r1_bam)
-    en_r1_bam <- end(r1_bam)
+    st_r1_bam <- BiocGenerics::start(r1_bam)
+    en_r1_bam <- BiocGenerics::end(r1_bam)
     r2_bam <- GenomicAlignments::last(bam)
-    st_r2_bam <- start(r2_bam)
-    en_r2_bam <- end(r2_bam)
+    st_r2_bam <- BiocGenerics::start(r2_bam)
+    en_r2_bam <- BiocGenerics::end(r2_bam)
 
     st_bam <- numeric(length(r1_bam))
     en_bam <- numeric(length(r1_bam))
@@ -22,9 +22,9 @@ pe_to_frag <- function(bamfile) {
       en_bam[j] <- max(en_r1_bam[j],en_r2_bam[j])
     }
 
-    fr_bam <- GRanges(seqnames(r1_bam),IRanges(st_bam,en_bam))
+    fr_bam <- GenomicRanges::GRanges(seqnames(r1_bam),IRanges::IRanges(st_bam,en_bam))
   } else {
-    fr_bam <- GRanges(bam)
+    fr_bam <- GenomicRanges::GRanges(bam)
   }
 
   return(fr_bam)
@@ -43,6 +43,17 @@ se_to_cuts <- function(bamfile) {
   return(cuts)
 }
 
+i_of_log_n <- function(i, n, what) {
+  n_logs <- floor(log10(n))
+  n_mod <- 10**n_logs
+  if(n_logs == 0) {
+    cat("\r", what, " ", i, " of ", n)
+  } else if(i == 1 | i %% n_mod == 0) {
+    cat("\r", what, " ", i, " of ", n)
+    flush.console()
+  }
+}
+
 #' Read multiple paired-end BAM files as a list of GRanges objects
 #'
 #' @param bamfiles A character vector of file locations for the BAM files to read
@@ -56,10 +67,7 @@ bam_to_fragment_list <- function(bamfiles) {
 
   for(i in 1:n_files) {
 
-    if(i == 1 | i %% 100 == 0) {
-      cat("\r","Reading ",i," of ",n_files)
-      flush.console()
-    }
+    i_of_log_n(i, n_files, "Reading")
 
     fragment_list[[i]] <- pe_to_frag(bamfiles[i])
 
