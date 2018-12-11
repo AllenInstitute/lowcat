@@ -200,7 +200,7 @@ filter_fragments <- function(fragment_list,
   for(i in 1:length(fragment_list)) {
     fragments <- fragment_list[[i]]
 
-    overlapping_fragments <- unique(subjectHits(findOverlaps(fragments, filter_GR)))
+    overlapping_fragments <- unique(queryHits(findOverlaps(fragments, filter_GR)))
 
     if(mode == "remove") {
       filtered_fragments <- fragments[-overlapping_fragments]
