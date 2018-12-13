@@ -161,7 +161,7 @@ get_great_regions <- function(symbols = NULL,
 #' @return A GenomicRanges object
 #'
 bed_to_GRanges <- function(bed) {
-  library(rtracklayer)
+  library(GenomicRanges)
 
   gr <- GRanges(seqnames=bed$chr,
                 IRanges(start=bed$start,
@@ -172,13 +172,31 @@ bed_to_GRanges <- function(bed) {
   return(gr)
 }
 
+#' Convert UCSC-style genomic locations to a BED-like data.frame
+#'
+#' @param gr A GenomicRanges object
+#'
+#' @return a data.frame with chr, start, end, and strand.
+#'
+GRanges_to_bed <- function(gr) {
+  bed <- data.frame(chr = seqnames(gr),
+                    start = start(gr),
+                    end = end(gr),
+                    strand = strand(gr))
+
+  bed$chr <- as.character(bed$chr)
+  bed$strand <- as.character(bed$strand)
+
+  bed
+}
+
 #' Convert UCSC-style genomic locations to a GenomicRegions object.
 #'
-#' @param ucsc_loc A UCSC-like genomic location. Example: "chr1:152,548,974-152,550,854"
+#' @param ucsc_loc A vector of UCSC-like genomic locations. Example: "chr1:152,548,974-152,550,854"
 #'
-#' @return a GenomicRanges object for the UCSC location
+#' @return a GenomicRanges object for the UCSC locations
 #'
-ucsc_loc_to_gr <- function(ucsc_loc) {
+ucsc_loc_to_GRanges <- function(ucsc_loc) {
   chr <- sub(":.+","",ucsc_loc)
   start_pos <- sub(".+:","",sub("-.+","",ucsc_loc))
   start_pos <- as.numeric(gsub(",","",start_pos))
@@ -189,3 +207,44 @@ ucsc_loc_to_gr <- function(ucsc_loc) {
           strand = "+")
 }
 
+#' Convert GenomicRanges objects to a vector of UCSC browser locations.
+#'
+#' @param gr A GenomicRanges object
+#'
+#' @return a character vector of UCSC browser locations
+#'
+GRanges_to_ucsc_loc <- function(gr) {
+  paste0(seqnames(gr), ":",
+         prettyNum(start(gr), big.mark = ","), "-",
+         prettyNum(end(gr), big.mark = ","))
+}
+
+#' Convert GenomicRanges to a bed-like data.frame
+#'
+#' @param ucsc_loc A vector of UCSC-like genomic locations. Example: "chr1:152,548,974-152,550,854"
+#'
+#' @return a BED-like data.frame with chr, start, end, and strand (+)
+#'
+ucsc_loc_to_bed <- function(ucsc_loc) {
+  chr <- sub(":.+","",ucsc_loc)
+  start_pos <- sub(".+:","",sub("-.+","",ucsc_loc))
+  start_pos <- as.numeric(gsub(",","",start_pos))
+  end_pos <- sub(".+-","",ucsc_loc)
+  end_pos <- as.numeric(gsub(",","",end_pos))
+  data.frame(chr = chr,
+             start = start_pos,
+             end = end_pos,
+             strand = "+")
+}
+
+#' Convert GenomicRanges objects to a vector of UCSC browser locations.
+#'
+#' @param bed A data.frame with columns chr, start, end, name, strand, and score.
+#'
+#' @return a character vector of UCSC browser locations
+#'
+bed_to_ucsc_loc <- function(bed) {
+  paste0(bed$chr, ":",
+         prettyNum(start(bed$start), big.mark = ","), "-",
+         prettyNum(end(bed$end), big.mark = ","))
+}
