@@ -4,7 +4,8 @@
 \alias{filter_fragments}
 \title{Filter a list of GenomicRanges objects against a single GenomicRanges object}
 \usage{
-filter_fragments(fragment_list, filter_GR, mode = "remove")
+filter_fragments(fragment_list, filter_GR, mode = "remove",
+  ignore_strand = TRUE)
 }
 \arguments{
 \item{fragment_list}{The list object containing GenomicRanges objects}
@@ -12,6 +13,8 @@ filter_fragments(fragment_list, filter_GR, mode = "remove")
 \item{filter_GR}{The GenomicRanges object to use for filtering.}
 
 \item{mode}{Whether to "remove" or "keep" overlaps. Default is "remove"}
+
+\item{ignore_strand}{Logical, whether or not to ignore the strand of regions in the comparison}
 }
 \value{
 A list object containing filtered GenomicRanges objects.
