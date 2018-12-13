@@ -1,33 +1,55 @@
 
-convert_fragment_list <- function(fragment_list, to = c("cuts","footprints")) {
+#' Convert a list of fragments to cut sites or Tn5 footprints
+#'
+#' @param fragment_list A list of GenomicRanges objects containing fragment regions
+#' @param to The type of regions to convert to. Can be "cuts", which are the 5' ends of each region, or "footprints",
+#' which are the 19 bp footprint regions of the Tn5 transposase.
+#'
+#' @return A list of the same length of fragment_list, with objects converted to cuts or footprints.
+#' @export
+#'
+convert_fragment_list <- function(fragment_list,
+                                  to = c("cuts","footprints")) {
   out_list <- list()
   if(to == "cuts") {
     for(i in 1:length(fragment_list)) {
       prime5 <- fragment_list[[i]]
-      end(prime5) <- start(prime5)
+      end(prime5) <- BiocGenerics::start(prime5)
       prime3 <- fragment_list[[i]]
-      start(prime3) <- end(prime3)
-      out_list[[i]] <- sort(c(prime5,prime3))
+      start(prime3) <- BiocGenerics::end(prime3)
+      out_list[[i]] <- GenomicRanges::sort(c(prime5,prime3))
       names(out_list)[i] <- names(fragment_list)[i]
     }
   } else if(to == "footprints") {
     for(i in 1:length(fragment_list)) {
       prime5 <- fragment_list[[i]]
-      end(prime5) <- start(prime5) + 19
-      start(prime5) <- start(prime5) -10
+      end(prime5) <- BiocGenerics::start(prime5) + 19
+      start(prime5) <- BiocGenerics::start(prime5) -10
       prime3 <- fragment_list[[i]]
-      start(prime3) <- end(prime3) - 18
-      end(prime3) <- end(prime3) + 10
+      start(prime3) <- BiocGenerics::end(prime3) - 18
+      end(prime3) <- BiocGenerics::end(prime3) + 10
       both <- c(prime5,prime3)
       start(both)[start(both) < 1] <- 1
-      out_list[[i]] <- sort(both)
+      out_list[[i]] <- BiocGenerics::sort(both)
       names(out_list)[i] <- names(fragment_list)[i]
     }
   }
   out_list
 }
 
-# Pileup reads, fragments, or cuts from a BAM file over target GRanges regions.
+#' Pileup reads, fragments, or cuts from a BAM file over target GRanges regions.
+#'
+#' @param gr_list
+#' @param gr_target
+#' @param gr_groups
+#' @param norm
+#' @param window_size
+#' @param window_mode
+#'
+#' @return
+#' @export
+#'
+#' @examples
 pileup_gr_list <- function(gr_list,
                            gr_target,
                            gr_groups = NULL,

@@ -189,18 +189,22 @@ fragments_to_windows <- function(fragment_list,
 #' @param fragment_list The list object containing GenomicRanges objects
 #' @param filter_GR The GenomicRanges object to use for filtering.
 #' @param mode Whether to "remove" or "keep" overlaps. Default is "remove"
+#' @param ignore_strand Logical, whether or not to ignore the strand of regions in the comparison
 #'
 #' @return A list object containing filtered GenomicRanges objects.
 #'
 filter_fragments <- function(fragment_list,
                              filter_GR,
-                             mode = "remove") {
+                             mode = "remove",
+                             ignore_strand = TRUE) {
 
   out_list <- list()
   for(i in 1:length(fragment_list)) {
     fragments <- fragment_list[[i]]
 
-    overlapping_fragments <- unique(subjectHits(findOverlaps(fragments, filter_GR)))
+    overlapping_fragments <- unique(queryHits(findOverlaps(fragments,
+                                                           filter_GR,
+                                                           ignore.strand = ignore_strand)))
 
     if(mode == "remove") {
       filtered_fragments <- fragments[-overlapping_fragments]

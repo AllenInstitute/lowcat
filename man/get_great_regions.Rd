@@ -4,8 +4,8 @@
 \alias{get_great_regions}
 \title{Generate regions similar to GREAT based on the UCSC RefGenes table}
 \usage{
-get_great_regions(symbols = NULL, minexpand = 5000, maxexpand = 1e+06,
-  genome = "mm10")
+get_great_regions(symbols = NULL, minexpand = 5000,
+  maxexpand = 1e+06, genome = "mm10")
 }
 \arguments{
 \item{symbols}{A character object with gene symbols to retain. If NULL, will return all genes. Default is NULL.}
