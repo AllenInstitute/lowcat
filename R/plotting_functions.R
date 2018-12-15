@@ -167,7 +167,7 @@ build_pile_plot <- function(gr_list,
                             target_color = "#B7B7B7",
                             highlight_color = "#F9ED32") {
 
-  gr_target <- ucsc_loc_to_gr(ucsc_loc)
+  gr_target <- ucsc_loc_to_GRanges(ucsc_loc)
   target_start <- start(gr_target)
   target_end <- end(gr_target)
 
@@ -205,7 +205,7 @@ build_pile_plot <- function(gr_list,
                   fill = fill))
 
   if(!is.null(highlight_loc)) {
-    hi_target <- ucsc_loc_to_gr(highlight_loc)
+    hi_target <- ucsc_loc_to_GRanges(highlight_loc)
     hi_start <- start(hi_target)
     hi_end <- end(hi_target)
 
@@ -271,7 +271,7 @@ build_pile_heatmap <- function(gr_list,
                                highlight_color = "#F9ED32",
                                baselines = TRUE) {
 
-  gr_target <- ucsc_loc_to_gr(ucsc_loc)
+  gr_target <- ucsc_loc_to_GRanges(ucsc_loc)
   target_start <- start(gr_target)
   target_end <- end(gr_target)
 
@@ -309,7 +309,7 @@ build_pile_heatmap <- function(gr_list,
                   fill = fill))
 
   if(!is.null(highlight_loc)) {
-    hi_target <- ucsc_loc_to_gr(highlight_loc)
+    hi_target <- ucsc_loc_to_GRanges(highlight_loc)
     hi_start <- start(hi_target)
     hi_end <- end(hi_target)
 
