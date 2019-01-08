@@ -89,19 +89,30 @@ read_multiplexed_paired_bam <- function(bam,
 
   param <- Rsamtools::ScanBamParam(flag = Rsamtools::scanBamFlag(isPaired = TRUE,
                                                                  isProperPair = TRUE,
-                                                                 isMinusStrand = FALSE,
-                                                                 isMateMinusStrand = TRUE),
-                                   what = c("qname", "rname", "pos", "mpos"))
+                                                                 isFirstMateRead = TRUE),
+                                   what = c("qname", "rname", "pos", "isize"))
 
   print("Reading multiplexed BAM file")
 
   bam_values <- data.frame(Rsamtools::scanBam(bam, param = param)[[1]])
 
+  print("Identifying barcodes and correcting positions")
+
   bam_values$barcode <- as.factor(substr(bam_values$qname, barcode_start, barcode_end))
   bam_values <- bam_values[,-1]
-  names(bam_values) <- c("chr","start","end","barcode")
 
-  bam_values$end <- bam_values$end + read_length
+  bam_values$start <- 0
+
+  bam_values$start[bam_values$isize >= 0] <- bam_values$pos[bam_values$isize >= 0]
+  bam_values$start[bam_values$isize < 0] <- bam_values$pos[bam_values$isize < 0] + bam_values$isize[bam_values$isize < 0]
+
+  bam_values$end <- 0
+
+  bam_values$end[bam_values$isize >= 0] <- bam_values$pos[bam_values$isize >= 0] + bam_values$isize[bam_values$isize >= 0] + read_length
+  bam_values$end[bam_values$isize < 0] <- bam_values$pos[bam_values$isize < 0] + read_length
+
+  bam_values <- bam_values[,c("rname","start","end","barcode")]
+  names(bam_values)[1] <- "chr"
 
   print(paste("Splitting based on", length(levels(bam_values$barcode)), "barcodes"))
 
@@ -116,7 +127,7 @@ read_multiplexed_paired_bam <- function(bam,
   possible_GRanges <- purrr::possibly(to_gr, NULL)
 
   print("Converting to GenomicRanges")
-  bam_fragments <- purrr::map(1:length(split_dfs),
+  bam_regions <- purrr::map(1:length(split_dfs),
                             function(i) {
                               x <- split_dfs[[i]]
                               gr <- possible_GRanges(x)
@@ -128,9 +139,7 @@ read_multiplexed_paired_bam <- function(bam,
                               }
                             })
 
-  names(bam_fragments) <- map_chr(split_dfs, function(x) { x$barcode[1] })
-
-  return(bam_fragments)
+  return(bam_regions)
 
 }
 
