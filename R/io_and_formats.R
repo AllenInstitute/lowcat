@@ -69,6 +69,71 @@ bam_to_fragment_list <- function(bamfiles) {
   fragment_list
 }
 
+#' Read a multiplexed, paired-end BAM file and convert to a GRanges fragment list
+#'
+#' This requires that the barcodes for multiplexing are in the QNAME/read name field of the BAM file.
+#'
+#' @param bam A character vector of file locations for the BAM file
+#' @param barcode_start A numeric value indicating where the barcode begins in QNAME (default = 1)
+#' @param barcode_end A numeric value indicating where the barcode ends in QNAME (default = 32)
+#' @param read_length A numeric value indicating the read length (default = 50)
+#' @param remove_duplicates A logical value indicating whether or not to deduplicate the fragments after demultiplexing (default = FALSE)
+#'
+#' @return a list object containing GenomicRanges objects. List names will be barcodes.
+#'
+read_multiplexed_paired_bam <- function(bam,
+                                        barcode_start = 1,
+                                        barcode_end = 32,
+                                        read_length = 50,
+                                        remove_duplicates = TRUE) {
+
+  param <- Rsamtools::ScanBamParam(flag = Rsamtools::scanBamFlag(isPaired = TRUE,
+                                                                 isProperPair = TRUE,
+                                                                 isMinusStrand = FALSE,
+                                                                 isMateMinusStrand = TRUE),
+                                   what = c("qname", "rname", "pos", "mpos"))
+
+  print("Reading multiplexed BAM file")
+
+  bam_values <- data.frame(Rsamtools::scanBam(bam, param = param)[[1]])
+
+  bam_values$barcode <- as.factor(substr(bam_values$qname, barcode_start, barcode_end))
+  bam_values <- bam_values[,-1]
+  names(bam_values) <- c("chr","start","end","barcode")
+
+  bam_values$end <- bam_values$end + read_length
+
+  print(paste("Splitting based on", length(levels(bam_values$barcode)), "barcodes"))
+
+  split_dfs <- split(bam_values, bam_values$barcode)
+
+  to_gr <- function(x) {
+    GenomicRanges::GRanges(seqnames = x$chr,
+                           IRanges::IRanges(start = x$start,
+                                            end = x$end))
+  }
+
+  possible_GRanges <- purrr::possibly(to_gr, NULL)
+
+  print("Converting to GenomicRanges")
+  bam_fragments <- purrr::map(1:length(split_dfs),
+                            function(i) {
+                              x <- split_dfs[[i]]
+                              gr <- possible_GRanges(x)
+
+                              if(remove_duplicates) {
+                                GenomicRanges::unique(gr)
+                              } else {
+                                gr
+                              }
+                            })
+
+  names(bam_fragments) <- map_chr(split_dfs, function(x) { x$barcode[1] })
+
+  return(bam_fragments)
+
+}
+
 #' Equally downsample a list of GenomicRanges objects
 #'
 #' @param fragment_list The list object containing GenomicRanges objects
