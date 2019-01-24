@@ -346,7 +346,7 @@ run_window_overlap_jaccard_parallel <- function(window_list,
 #'
 res_to_distance_matrix <- function(res) {
 
-  res <- res[order(res[,1], res[,2])]
+  res <- res[order(res[,1], res[,2]),]
 
   res_names <- c(res$s1_name[1],res$s2_name[1:(n_samples - 1)])
 
