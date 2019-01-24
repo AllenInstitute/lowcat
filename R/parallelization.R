@@ -34,6 +34,11 @@ time_display <- function(i, n_chunks, start_time) {
   paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.          ")
 }
 
+cat_update <- function(...) {
+  cat("\r", ...)
+  flush.console()
+}
+
 #' Run clusterApplyLB across a single variable, N, using chunks with user feedback.
 #'
 #' @param N Variable passed to nodes running FUN
@@ -54,7 +59,7 @@ clusterApplyLB_chunks <- function(N,
   start_time <- Sys.time()
 
   for(i in 1:n_chunks) {
-    chunk_res <- clusterApplyLB(cl, chunk_starts[i]:chunk_ends[i], FUN, ...)
+    chunk_res <- parallel::clusterApplyLB(cl, chunk_starts[i]:chunk_ends[i], FUN, ...)
     res <- c(res, chunk_res)
     cat("\r",time_display(i, n_chunks, start_time))
     flush.console()
