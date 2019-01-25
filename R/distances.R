@@ -348,15 +348,16 @@ res_to_distance_matrix <- function(res) {
 
   res <- res[order(res[,1], res[,2]),]
 
+  n_samples <- max(res$s2[res$s1 == 1])
   res_names <- c(res$s1_name[1],res$s2_name[1:(n_samples - 1)])
 
-  res_mat <- matrix(0, nrow(res) + 1, nrow(res) + 1)
-  res_mat[lower.tri(res_mat, diag = FALSE)] <- res$jd
+  res_mat <- matrix(0, n_samples, n_samples)
+  res_mat[lower.tri(res_mat, diag = FALSE)] <- res$jaccard_distance
   res_mat <- t(res_mat)
-  res_mat[lower.tri(res_mat, diag = FALSE)] <- res$jd
+  res_mat[lower.tri(res_mat, diag = FALSE)] <- res$jaccard_distance
 
-  rownames(res_matrix) <- res_names
-  colnames(res_matrix) <- res_names
+  rownames(res_mat) <- res_names
+  colnames(res_mat) <- res_names
 
-  res_matrix
+  res_mat
 }
