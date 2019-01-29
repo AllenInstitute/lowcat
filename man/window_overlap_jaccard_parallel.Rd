@@ -2,7 +2,8 @@
 % Please edit documentation in R/distances.R
 \name{window_overlap_jaccard_parallel}
 \alias{window_overlap_jaccard_parallel}
-\title{Linking function for computing jaccard similarity scores based on window overlaps in parallel.}
+\title{# Returns only jd
+This version is slower.}
 \usage{
 window_overlap_jaccard_parallel(N)
 }
@@ -10,5 +11,6 @@ window_overlap_jaccard_parallel(N)
 \item{N}{Index of the comparison to compute}
 }
 \description{
-Linking function for computing jaccard similarity scores based on window overlaps in parallel.
+# Returns only jd
+This version is slower.
 }

@@ -5,7 +5,7 @@
 #' @return a GenomicRanges object
 #'
 pe_to_frag <- function(bamfile) {
-  bam <- readGAlignmentPairs(bamfile)
+  bam <- GenomicAlignments::readGAlignmentPairs(bamfile)
   if(length(bam) > 0) {
     r1_bam <- GenomicAlignments::first(bam)
     st_r1_bam <- start(r1_bam)
@@ -22,9 +22,9 @@ pe_to_frag <- function(bamfile) {
       en_bam[j] <- max(en_r1_bam[j],en_r2_bam[j])
     }
 
-    fr_bam <- GRanges(seqnames(r1_bam),IRanges(st_bam,en_bam))
+    fr_bam <- GenomicRanges::GRanges(seqnames(r1_bam), IRanges::IRanges(st_bam,en_bam))
   } else {
-    fr_bam <- GRanges(bam)
+    fr_bam <- GenomicRanges::GRanges(bam)
   }
 
   return(fr_bam)
@@ -37,9 +37,9 @@ pe_to_frag <- function(bamfile) {
 #' @return a GenomicRanges object
 #'
 se_to_cuts <- function(bamfile) {
-  bam <- readGAlignments(bamfile)
-  gr <- GRanges(bam)
-  cuts <- resize(gr, 1, fix = "start")
+  bam <- GenomicAlignments::readGAlignments(bamfile)
+  gr <- GenomicRanges::GRanges(bam)
+  cuts <- GenomicRanges::resize(gr, 1, fix = "start")
   return(cuts)
 }
 
@@ -234,9 +234,9 @@ fragments_to_windows <- function(fragment_list,
   out_list <- list()
   for(i in 1:length(fragment_list)) {
 
-    window_df <- data.frame(chr = as.character(seqnames(fragment_list[[i]])),
+    window_df <- data.frame(chr = as.character(GenomicRanges::seqnames(fragment_list[[i]])),
                             pos = as.integer(ceiling(start(fragment_list[[i]]) / window_size))) %>%
-      arrange(chr,pos)
+      dplyr::arrange(chr,pos)
 
     if(collapse) {
       window_df <- unique(window_df)
@@ -276,9 +276,9 @@ filter_fragments <- function(fragment_list,
   for(i in 1:length(fragment_list)) {
     fragments <- fragment_list[[i]]
 
-    overlapping_fragments <- unique(queryHits(findOverlaps(fragments,
-                                                           filter_GR,
-                                                           ignore.strand = ignore_strand)))
+    overlapping_fragments <- unique(GenomicRanges::queryHits(GenomicRanges::findOverlaps(fragments,
+                                                                                         filter_GR,
+                                                                                         ignore.strand = ignore_strand)))
 
     if(mode == "remove") {
       filtered_fragments <- fragments[-overlapping_fragments]
@@ -352,9 +352,9 @@ count_fragment_overlaps <- function(fragment_list,
     }
 
     if(binarize) {
-      out_mat[, i] <- countOverlaps(target_GRanges,fragment_list[[i]]) > 0
+      out_mat[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0
     } else {
-      out_mat[, i] <- countOverlaps(target_GRanges,fragment_list[[i]])
+      out_mat[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
     }
 
   }
@@ -391,22 +391,22 @@ run_pe_to_frag_parallel <- function(bam_files,
                                     n_cores = 6) {
   # Set up parallelization
   if(n_cores == "auto") {
-    n_cores <- detectCores()
+    n_cores <- parallel::detectCores()
   }
 
   print(paste("Starting",n_cores,"nodes"))
 
-  cl <- makeCluster(n_cores)
+  cl <- parallel::makeCluster(n_cores)
 
   print("Exporting necessary objects to nodes")
 
-  clusterEvalQ(cl, library(GenomicRanges))
-  clusterEvalQ(cl, library(GenomicAlignments))
-  clusterExport(cl, c("bam_files",
-                      "pe_to_frag",
-                      "pe_to_frag_parallel"),
-                # Use the function's local environment for export
-                envir = environment())
+  parallel::clusterEvalQ(cl, library(GenomicRanges))
+  parallel::clusterEvalQ(cl, library(GenomicAlignments))
+  parallel::clusterExport(cl, c("bam_files",
+                                "pe_to_frag",
+                                "pe_to_frag_parallel"),
+                          # Use the function's local environment for export
+                          envir = environment())
 
   N <- length(bam_files)
 
@@ -415,7 +415,7 @@ run_pe_to_frag_parallel <- function(bam_files,
                                cl = cl,
                                FUN = pe_to_frag_parallel)
 
-  stopCluster(cl)
+  parallel::stopCluster(cl)
 
   if(is.null(sample_names)) {
     names(res) <- bam_files
@@ -450,18 +450,18 @@ run_se_to_cuts_parallel <- function(bam_files,
                                     n_cores = 6) {
   # Set up parallelization
   if(n_cores == "auto") {
-    n_cores <- detectCores()
+    n_cores <- parallel::detectCores()
   }
 
   print(paste("Starting",n_cores,"nodes"))
 
-  cl <- makeCluster(n_cores)
+  cl <- parallel::makeCluster(n_cores)
 
   print("Exporting necessary objects to nodes")
 
-  clusterEvalQ(cl, library(GenomicRanges))
-  clusterEvalQ(cl, library(GenomicAlignments))
-  clusterExport(cl, c("bam_files",
+  parallel::clusterEvalQ(cl, library(GenomicRanges))
+  parallel::clusterEvalQ(cl, library(GenomicAlignments))
+  parallel::clusterExport(cl, c("bam_files",
                       "se_to_cuts",
                       "se_to_cuts_parallel"),
                 # Use the function's local environment for export
@@ -494,6 +494,8 @@ run_se_to_cuts_parallel <- function(bam_files,
 #' @param sort_out_file whether or not to sort the output file. default is TRUE, which will force index_out_file to TRUE.
 #' @param index_out_file whether or not to index the output file. Default is TRUE.
 #' @param keep_unsorted If sort_out_file == TRUE, whether or not to keep the original, unsorted file. Default is FALSE.
+#'
+#' @export
 merge_bam_files <- function(bam_files,
                             out_file,
                             make_indexes = FALSE,
