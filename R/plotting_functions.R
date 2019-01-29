@@ -234,8 +234,8 @@ build_pile_plot <- function(gr_list,
     pile <- piles[[i]]
     pile_color <- group_colors[names(group_colors) == names(piles)[i]]
 
-    baseline <- data.frame(x = target_start,
-                           xend = target_end,
+    baseline <- data.frame(x = start(gr_target),
+                           xend = end(gr_target),
                            y = i,
                            yend = i,
                            color = pile_color)
