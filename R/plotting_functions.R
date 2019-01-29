@@ -51,18 +51,17 @@ convert_fragment_list <- function(fragment_list,
 #'
 #' @examples
 pileup_gr_list <- function(gr_list,
-                           gr_target,
-                           gr_groups = NULL,
-                           norm="PM",
-                           window_size = NULL,
-                           window_mode = c("max","mean","median")) {
+                            gr_target,
+                            gr_groups = NULL,
+                            norm="PM",
+                            window_size = NULL,
+                            window_mode = c("max","mean","median")) {
 
   if(is.null(gr_groups)) {
     gr_groups <- 1
     groups <- 1
   } else {
     groups <- unique(gr_groups)
-
   }
 
   out_list <- list()
@@ -70,45 +69,50 @@ pileup_gr_list <- function(gr_list,
   for(i in 1:length(groups)) {
 
     group <- groups[i]
-    pile <- data.frame(pos = start(gr_target):end(gr_target), val = 0)
     group_gr <- gr_list[gr_groups == group]
 
-    for(j in 1:length(group_gr)) {
+    chr_list <- lapply(group_gr, function(x) ranges(x[as.character(seqnames(x)) == as.character(seqnames(gr_target))]))
 
-      frags <- group_gr[[j]]
+    ol_list <- lapply(chr_list, function(x) subsetByOverlaps(x, ranges(gr_target)))
 
-      ol <- suppressWarnings(as.data.frame(findOverlaps(gr_target,frags)))
-      names(ol) <- c("target_hit","frags_hit")
+    ol_lens <- lapply(ol_list, length)
 
-      if(nrow(ol) > 0) {
+    ol_list <- ol_list[ol_lens > 0]
 
-        target_start <- start(gr_target)
-        target_end <- end(gr_target)
-        target_strand <- as.character(strand(gr_target))
-        target_width <- width(gr_target)
-        frags_start <- start(frags)[ol$frags_hit]
-        frags_end <- end(frags)[ol$frags_hit]
-        frags_width <- width(frags)[ol$frags_hit]
+    if(length(ol_list) == 0) {
+      out_list[[i]] <- NULL
+      next()
+    }
 
-        for(k in 1:nrow(ol)) {
+    ol_ranges <- ol_list[[1]]
 
-          if(target_strand %in% c("+","*")) {
-            hit_start <- frags_start[k] - target_start + 1
-          } else if (target_strand == "-") {
-            hit_start <- target_end - frags_end[k] + 1
-          }
-          hit_end <- hit_start + frags_width[k] - 1
-
-          if(hit_start < 1) { hit_start <- 1 }
-          if(hit_end > target_width) { hit_end <- target_width }
-
-          if( hit_start <= target_width & hit_end >= 1) {
-            pile$val[hit_start:hit_end] <- pile$val[hit_start:hit_end] + 1
-          }
-
-        }
+    if(length(ol_list) > 1) {
+      for(j in 2:length(ol_list)) {
+        ol_ranges <- c(ol_ranges, ol_list[[j]])
       }
+    }
 
+    ol_coverage <- coverage(ol_ranges)
+
+    pile_start <- ol_coverage@lengths[1] + 1
+
+    pile_end <- pile_start + sum(ol_coverage@lengths[-1]) - 1
+
+    pile <- data.frame(pos = pile_start:pile_end,
+                       val = rep(ol_coverage@values[-1], ol_coverage@lengths[-1]))
+
+    pile <- pile[pile$pos >= start(gr_target) & pile$pos <= end(gr_target), ]
+
+    # pad missing data
+    if(pile$pos[1] > start(gr_target)) {
+      pile <- rbind(data.frame(pos = start(gr_target):(pile$pos[1] - 1),
+                               val = 0),
+                    pile)
+    }
+    if(pile$pos[length(pile$pos)] < end(gr_target)) {
+      pile <- rbind(pile,
+                    data.frame(pos = (pile$pos[length(pile$pos)] + 1):end(gr_target),
+                               val = 0))
     }
 
     if(!is.null(window_size)) {
@@ -141,9 +145,8 @@ pileup_gr_list <- function(gr_list,
     }
 
     out_list[[i]] <- pile
-    names(out_list)[i] <- groups[i]
-
   }
+  names(out_list) <- groups
 
 
   if(length(groups) == 1) {
@@ -155,17 +158,17 @@ pileup_gr_list <- function(gr_list,
 }
 
 build_pile_plot <- function(gr_list,
-                            ucsc_loc,
-                            highlight_loc = NULL,
-                            padding = c(1e5,1e5),
-                            gr_groups = NULL,
-                            group_colors = NULL, #named vector
-                            norm = "PM",
-                            max_val = NULL,
-                            window_size = NULL,
-                            window_mode = c("max","mean","median"),
-                            target_color = "#B7B7B7",
-                            highlight_color = "#F9ED32") {
+                             ucsc_loc,
+                             highlight_loc = NULL,
+                             padding = c(1e5,1e5),
+                             gr_groups = NULL,
+                             group_colors = NULL, #named vector
+                             norm = "PM",
+                             max_val = NULL,
+                             window_size = NULL,
+                             window_mode = c("max","mean","median"),
+                             target_color = "#B7B7B7",
+                             highlight_color = "#F9ED32") {
 
   gr_target <- ucsc_loc_to_GRanges(ucsc_loc)
   target_start <- start(gr_target)
@@ -175,11 +178,11 @@ build_pile_plot <- function(gr_list,
   end(gr_target) <- end(gr_target) + padding[2]
 
   piles <- pileup_gr_list(gr_list,
-                          gr_target,
-                          gr_groups,
-                          norm,
-                          window_size,
-                          window_mode)
+                           gr_target,
+                           gr_groups,
+                           norm,
+                           window_size,
+                           window_mode)
 
   target_rect <- data.frame(xmin = target_start,
                             xmax = target_end,
@@ -231,13 +234,8 @@ build_pile_plot <- function(gr_list,
     pile <- piles[[i]]
     pile_color <- group_colors[names(group_colors) == names(piles)[i]]
 
-    pile$val <- i + pile$val / max_val
-    pile$min <- i
-
-    pile$val[pile$val > i + 1] <- i + 1
-
-    baseline <- data.frame(x = min(pile$pos),
-                           xend = max(pile$pos),
+    baseline <- data.frame(x = target_start,
+                           xend = target_end,
                            y = i,
                            yend = i,
                            color = pile_color)
@@ -247,11 +245,23 @@ build_pile_plot <- function(gr_list,
                    aes(x = x, xend = xend,
                        y = y, yend = y,
                        color = color),
-                   size = 0.1) +
-      geom_ribbon(data = pile,
-                  aes(x = pos, ymin = min, ymax = val),
-                  color = NA,
-                  fill = pile_color)
+                   size = 0.1)
+
+    if(!is.null(pile)) {
+      pile$val <- i + pile$val / max_val
+      pile$min <- i
+
+      pile$val[pile$val > i + 1] <- i + 1
+      pile_plot <- pile_plot +
+        geom_ribbon(data = pile,
+                    aes(x = pos, ymin = min, ymax = val),
+                    color = NA,
+                    fill = pile_color)
+    }
+
+
+
+
   }
 
   pile_plot
