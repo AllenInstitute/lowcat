@@ -77,6 +77,7 @@ bam_to_fragment_list <- function(bamfiles) {
 #' @param barcode_start A numeric value indicating where the barcode begins in QNAME (default = 1)
 #' @param barcode_end A numeric value indicating where the barcode ends in QNAME (default = 32)
 #' @param read_length A numeric value indicating the read length (default = 50)
+#' @param min_frags A numeric value indicating the minimum number of fragments required to retain a barcode (default = 100)
 #' @param remove_duplicates A logical value indicating whether or not to deduplicate the fragments after demultiplexing (default = FALSE)
 #'
 #' @return a list object containing GenomicRanges objects. List names will be barcodes.
@@ -85,6 +86,7 @@ read_multiplexed_paired_bam <- function(bam,
                                         barcode_start = 1,
                                         barcode_end = 32,
                                         read_length = 50,
+                                        min_frags = 100,
                                         remove_duplicates = TRUE) {
 
   param <- Rsamtools::ScanBamParam(flag = Rsamtools::scanBamFlag(isPaired = TRUE,
@@ -98,8 +100,22 @@ read_multiplexed_paired_bam <- function(bam,
 
   print("Identifying barcodes and correcting positions")
 
-  bam_values$barcode <- as.factor(substr(bam_values$qname, barcode_start, barcode_end))
-  bam_values <- bam_values[,-1]
+
+
+  if(min_frags > 1) {
+    bam_values$barcode <- substr(bam_values$qname, barcode_start, barcode_end)
+    bc_counts <- table(bam_values$barcode)
+    keep_bc <- names(bc_counts)[which(bc_counts > min_frags)]
+    keep_lgl <- bam_values$barcode %in% keep_bc
+    bam_values <- bam_values[keep_lgl,]
+    rm(keep_lgl)
+    rm(keep_bc)
+    rm(bc_counts)
+    bam_values$barcode <- as.factor(bam_values$barcode)
+  } else {
+    bam_values$barcode <- as.factor(substr(bam_values$qname, barcode_start, barcode_end))
+    bam_values <- bam_values[,-1]
+  }
 
   bam_values$start <- 0
 
@@ -117,6 +133,13 @@ read_multiplexed_paired_bam <- function(bam,
   print(paste("Splitting based on", length(levels(bam_values$barcode)), "barcodes"))
 
   split_dfs <- split(bam_values, bam_values$barcode)
+
+  names(split_dfs) <- map_chr(split_dfs,
+                              function(x) {
+                                as.character(x$barcode[1])
+                              })
+
+  print(head(names(split_dfs)))
 
   to_gr <- function(x) {
     GenomicRanges::GRanges(seqnames = x$chr,
@@ -138,6 +161,8 @@ read_multiplexed_paired_bam <- function(bam,
                                 gr
                               }
                             })
+
+  names(bam_regions) <- names(split_dfs)
 
   return(bam_regions)
 
