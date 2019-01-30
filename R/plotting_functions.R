@@ -92,28 +92,12 @@ pileup_gr_list <- function(gr_list,
       }
     }
 
-    ol_coverage <- coverage(ol_ranges)
+    ol_coverage <- coverage(ol_ranges,
+                            shift = -1 * start(gr_target),
+                            width = end(gr_target) - start(gr_target) + 1)
 
-    pile_start <- ol_coverage@lengths[1] + 1
-
-    pile_end <- pile_start + sum(ol_coverage@lengths[-1]) - 1
-
-    pile <- data.frame(pos = pile_start:pile_end,
-                       val = rep(ol_coverage@values[-1], ol_coverage@lengths[-1]))
-
-    pile <- pile[pile$pos >= start(gr_target) & pile$pos <= end(gr_target), ]
-
-    # pad missing data
-    if(pile$pos[1] > start(gr_target)) {
-      pile <- rbind(data.frame(pos = start(gr_target):(pile$pos[1] - 1),
-                               val = 0),
-                    pile)
-    }
-    if(pile$pos[length(pile$pos)] < end(gr_target)) {
-      pile <- rbind(pile,
-                    data.frame(pos = (pile$pos[length(pile$pos)] + 1):end(gr_target),
-                               val = 0))
-    }
+    pile <- data.frame(pos = start(gr_target):end(gr_target),
+                       val = rep(ol_coverage@values, ol_coverage@lengths))
 
     if(!is.null(window_size)) {
       pile <- pile %>%
