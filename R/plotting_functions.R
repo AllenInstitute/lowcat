@@ -53,7 +53,7 @@ convert_fragment_list <- function(fragment_list,
 pileup_gr_list <- function(gr_list,
                             gr_target,
                             gr_groups = NULL,
-                            norm="PM",
+                            norm = c("PM","max"),
                             window_size = NULL,
                             window_mode = c("max","mean","median")) {
 
@@ -126,6 +126,8 @@ pileup_gr_list <- function(gr_list,
     if(norm == "PM") {
       m <- sum(unlist(lapply(group_gr,length)))
       pile$val <- pile$val/m*1e6
+    } else if(norm == "max") {
+      pile$val <- pile$val/max(pile$val)
     }
 
     out_list[[i]] <- pile
@@ -147,7 +149,7 @@ build_pile_plot <- function(gr_list,
                              padding = c(1e5,1e5),
                              gr_groups = NULL,
                              group_colors = NULL, #named vector
-                             norm = "PM",
+                             norm = c("PM","max"),
                              max_val = NULL,
                              window_size = NULL,
                              window_mode = c("max","mean","median"),
