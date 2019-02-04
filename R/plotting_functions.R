@@ -80,24 +80,27 @@ pileup_gr_list <- function(gr_list,
     ol_list <- ol_list[ol_lens > 0]
 
     if(length(ol_list) == 0) {
-      out_list[[i]] <- NULL
-      next()
-    }
+      pile <- data.frame(pos = start(gr_target):end(gr_target),
+                         val = 0)
+    } else {
 
-    ol_ranges <- ol_list[[1]]
+      ol_ranges <- ol_list[[1]]
 
-    if(length(ol_list) > 1) {
-      for(j in 2:length(ol_list)) {
-        ol_ranges <- c(ol_ranges, ol_list[[j]])
+      if(length(ol_list) > 1) {
+        for(j in 2:length(ol_list)) {
+          ol_ranges <- c(ol_ranges, ol_list[[j]])
+        }
       }
+
+      ol_coverage <- coverage(ol_ranges,
+                              shift = -1 * start(gr_target),
+                              width = end(gr_target) - start(gr_target) + 1)
+
+      pile <- data.frame(pos = start(gr_target):end(gr_target),
+                         val = rep(ol_coverage@values, ol_coverage@lengths))
+
     }
 
-    ol_coverage <- coverage(ol_ranges,
-                            shift = -1 * start(gr_target),
-                            width = end(gr_target) - start(gr_target) + 1)
-
-    pile <- data.frame(pos = start(gr_target):end(gr_target),
-                       val = rep(ol_coverage@values, ol_coverage@lengths))
 
     if(!is.null(window_size)) {
       pile <- pile %>%
