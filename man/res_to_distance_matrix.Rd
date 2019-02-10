@@ -2,16 +2,16 @@
 % Please edit documentation in R/distances.R
 \name{res_to_distance_matrix}
 \alias{res_to_distance_matrix}
-\title{Convert parallel jaccard similarity results from data.frame to a matrix}
+\title{Convert jaccard similarity results from data.frame-based functions to a matrix}
 \usage{
 res_to_distance_matrix(res)
 }
 \arguments{
-\item{res}{The results from run_fragment_overlap_jaccard_parallel() or run_window_overlap_jaccard_parallel()}
+\item{res}{The results from overlap_jaccard_df() or window_jaccard_df()}
 }
 \value{
 a jaccard distance matrix
 }
 \description{
-Convert parallel jaccard similarity results from data.frame to a matrix
+Convert jaccard similarity results from data.frame-based functions to a matrix
 }

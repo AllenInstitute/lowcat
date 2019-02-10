@@ -4,7 +4,7 @@
 #' @param n_chunks number of chunks
 #'
 #' @return a character object.
-#'
+#' @export
 percent_display <- function(i, n_chunks) {
   paste0(floor(i/n_chunks * 100),"%")
 }
@@ -16,7 +16,7 @@ percent_display <- function(i, n_chunks) {
 #' @param start_time The start time of the first chunk
 #'
 #' @return a character object.
-#'
+#' @export
 time_display <- function(i, n_chunks, start_time) {
   current_time <- Sys.time()
   time_diff <- current_time - start_time
@@ -34,6 +34,11 @@ time_display <- function(i, n_chunks, start_time) {
   paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.          ")
 }
 
+#' cat for replaceable messages
+#'
+#' @param ... Passed to cat()
+#'
+#' @export
 cat_update <- function(...) {
   cat("\r", ...)
   flush.console()
@@ -47,6 +52,8 @@ cat_update <- function(...) {
 #' @param FUN The function to run using clusterApplyLB()
 #' @param ... Additional parameters passed to clusterApplyLB()
 #'
+#' @return a list object with the outputs of FUN
+#' @export
 clusterApplyLB_chunks <- function(N,
                                   n_chunks = 20,
                                   cl, FUN, ...) {

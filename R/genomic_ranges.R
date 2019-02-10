@@ -9,6 +9,7 @@
 #' @param group_col The column of the samples data.frame with group assignments.
 #'
 #' @return A list of GRanges objects, one for each unique value in group_col.
+#' @export
 #'
 combine_group_GRanges <- function(fragment_list,
                                   samples,

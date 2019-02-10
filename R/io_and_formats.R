@@ -3,7 +3,7 @@
 #' @param bamfile The BAM file to read
 #'
 #' @return a GenomicRanges object
-#'
+#' @export
 pe_to_frag <- function(bamfile) {
   bam <- GenomicAlignments::readGAlignmentPairs(bamfile)
   if(length(bam) > 0) {
@@ -35,7 +35,7 @@ pe_to_frag <- function(bamfile) {
 #' @param bamfile The BAM file to read
 #'
 #' @return a GenomicRanges object
-#'
+#' @export
 se_to_cuts <- function(bamfile) {
   bam <- GenomicAlignments::readGAlignments(bamfile)
   gr <- GenomicRanges::GRanges(bam)
@@ -48,7 +48,7 @@ se_to_cuts <- function(bamfile) {
 #' @param bamfiles A character vector of file locations for the BAM files to read
 #'
 #' @return a list object containing GenomicRanges objects. List names will BAM filenames without leading directories.
-#'
+#' @export
 bam_to_fragment_list <- function(bamfiles) {
   fragment_list <- vector("list",length(bamfiles))
 
@@ -81,7 +81,7 @@ bam_to_fragment_list <- function(bamfiles) {
 #' @param remove_duplicates A logical value indicating whether or not to deduplicate the fragments after demultiplexing (default = FALSE)
 #'
 #' @return a list object containing GenomicRanges objects. List names will be barcodes.
-#'
+#' @export
 read_multiplexed_paired_bam <- function(bam,
                                         barcode_start = 1,
                                         barcode_end = 32,
@@ -177,7 +177,7 @@ read_multiplexed_paired_bam <- function(bam,
 #' @param seed A seed value for sampling for reproducibility. Default is 42.
 #'
 #' @return A list object containing downsampled GenomicRanges objects.
-#'
+#' @export
 downsample_fragments <- function(fragment_list,
                                  downsample_n = 1e4,
                                  discard_if_too_few = TRUE,
@@ -220,7 +220,7 @@ downsample_fragments <- function(fragment_list,
 #' @param collapse Logical to determine if overlapping fragments should be merged after expansion. Default is TRUE.
 #'
 #' @return A list object containing resized GenomicRanges objects.
-#'
+#' @export
 expand_fragments <- function(fragment_list,
                              width = 1e4,
                              collapse = TRUE) {
@@ -251,7 +251,7 @@ expand_fragments <- function(fragment_list,
 #' @param collapse Logical to determine if fragments found in the same window should be merged after conversion. Default is TRUE.
 #'
 #' @return A nested list object. Each sample in the fragment list will result in a list containing vectors with integer values for windows on each chromosome.
-#'
+#' @export
 fragments_to_windows <- function(fragment_list,
                                  window_size = 1e4,
                                  collapse = TRUE) {
@@ -291,7 +291,7 @@ fragments_to_windows <- function(fragment_list,
 #' @param ignore_strand Logical, whether or not to ignore the strand of regions in the comparison
 #'
 #' @return A list object containing filtered GenomicRanges objects.
-#'
+#' @export
 filter_fragments <- function(fragment_list,
                              filter_GR,
                              mode = "remove",
@@ -324,7 +324,7 @@ filter_fragments <- function(fragment_list,
 #' @param width If not NULL, whill resize the regions in each GenomicRanges object to this width before merging. Default is 500.
 #'
 #' @return A GenomicRanges object containing merged regions.
-#'
+#' @export
 collapse_fragment_list <- function(fragment_list,
                                    width = 500) {
 
@@ -358,7 +358,7 @@ collapse_fragment_list <- function(fragment_list,
 #'
 #' @return If aggregate == TRUE, a vector with the total count of overlaps between each object in fragment_list and all objects in target_GRanges.
 #' If aggregate == FALSE, a matrix with count values for overlaps between each object in fragment_list (as columns) and each object in target_GRanges (as rows).
-#'
+#' @export
 count_fragment_overlaps <- function(fragment_list,
                                     target_GRanges,
                                     binarize = TRUE,
@@ -396,7 +396,7 @@ count_fragment_overlaps <- function(fragment_list,
 #' Linking function for running pe_to_frag in parallel mode.
 #'
 #' @param N Index of the bam_file to read
-#'
+#' @export
 pe_to_frag_parallel <- function(N) {
   bam_file <- bam_files[N]
 
@@ -410,7 +410,7 @@ pe_to_frag_parallel <- function(N) {
 #' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
 #'
 #' @return a list of GenomicRanges objects
-#'
+#' @export
 run_pe_to_frag_parallel <- function(bam_files,
                                     sample_names = NULL,
                                     n_cores = 6) {
@@ -455,7 +455,7 @@ run_pe_to_frag_parallel <- function(bam_files,
 #' Linking function for running se_to_cuts in parallel mode.
 #'
 #' @param N Index of the bam_file to read
-#'
+#' @export
 se_to_cuts_parallel <- function(N) {
   bam_file <- bam_files[N]
 
@@ -469,7 +469,7 @@ se_to_cuts_parallel <- function(N) {
 #' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
 #'
 #' @return a list of GenomicRanges objects
-#'
+#' @export
 run_se_to_cuts_parallel <- function(bam_files,
                                     sample_names = NULL,
                                     n_cores = 6) {
@@ -625,7 +625,7 @@ merge_bam_files <- function(bam_files,
 #'
 #' @return a lis of GenomicRanges objects with all members of each cluster downsampled to the
 #' minimum number of reads of all cluster members.
-#'
+#' @export
 balance_fragment_clusters <- function(fragment_list,
                                       clusters) {
   unique_clusters <- unique(clusters)
@@ -644,3 +644,98 @@ balance_fragment_clusters <- function(fragment_list,
 
 }
 
+
+#' Convert data.frames in BED-like format to GRanges objects
+#'
+#' @param bed A data.frame with columns chr, start, end, name, strand, and score.
+#'
+#' @return A GenomicRanges object
+#'
+bed_to_GRanges <- function(bed) {
+  library(GenomicRanges)
+
+  gr <- GRanges(seqnames=bed$chr,
+                IRanges(start=bed$start,
+                        end=bed$end),
+                strand=bed$strand,
+                mcols=bed[,c("name","score")])
+
+  return(gr)
+}
+
+#' Convert UCSC-style genomic locations to a BED-like data.frame
+#'
+#' @param gr A GenomicRanges object
+#'
+#' @return a data.frame with chr, start, end, and strand.
+#'
+GRanges_to_bed <- function(gr) {
+  bed <- data.frame(chr = seqnames(gr),
+                    start = start(gr),
+                    end = end(gr),
+                    strand = strand(gr))
+
+  bed$chr <- as.character(bed$chr)
+  bed$strand <- as.character(bed$strand)
+
+  bed
+}
+
+#' Convert UCSC-style genomic locations to a GenomicRegions object.
+#'
+#' @param ucsc_loc A vector of UCSC-like genomic locations. Example: "chr1:152,548,974-152,550,854"
+#'
+#' @return a GenomicRanges object for the UCSC locations
+#'
+ucsc_loc_to_GRanges <- function(ucsc_loc) {
+  chr <- sub(":.+","",ucsc_loc)
+  start_pos <- sub(".+:","",sub("-.+","",ucsc_loc))
+  start_pos <- as.numeric(gsub(",","",start_pos))
+  end_pos <- sub(".+-","",ucsc_loc)
+  end_pos <- as.numeric(gsub(",","",end_pos))
+  GRanges(seqnames = chr,
+          IRanges(start_pos,end_pos),
+          strand = "+")
+}
+
+#' Convert GenomicRanges objects to a vector of UCSC browser locations.
+#'
+#' @param gr A GenomicRanges object
+#'
+#' @return a character vector of UCSC browser locations
+#'
+GRanges_to_ucsc_loc <- function(gr) {
+  paste0(seqnames(gr), ":",
+         prettyNum(start(gr), big.mark = ","), "-",
+         prettyNum(end(gr), big.mark = ","))
+}
+
+#' Convert GenomicRanges to a bed-like data.frame
+#'
+#' @param ucsc_loc A vector of UCSC-like genomic locations. Example: "chr1:152,548,974-152,550,854"
+#'
+#' @return a BED-like data.frame with chr, start, end, and strand (+)
+#'
+ucsc_loc_to_bed <- function(ucsc_loc) {
+  chr <- sub(":.+","",ucsc_loc)
+  start_pos <- sub(".+:","",sub("-.+","",ucsc_loc))
+  start_pos <- as.numeric(gsub(",","",start_pos))
+  end_pos <- sub(".+-","",ucsc_loc)
+  end_pos <- as.numeric(gsub(",","",end_pos))
+  data.frame(chr = chr,
+             start = start_pos,
+             end = end_pos,
+             strand = "+")
+}
+
+#' Convert GenomicRanges objects to a vector of UCSC browser locations.
+#'
+#' @param bed A data.frame with columns chr, start, end, name, strand, and score.
+#'
+#' @return a character vector of UCSC browser locations
+#'
+bed_to_ucsc_loc <- function(bed) {
+  paste0(bed$chr, ":",
+         prettyNum(start(bed$start), big.mark = ","), "-",
+         prettyNum(end(bed$end), big.mark = ","))
+}

@@ -4,11 +4,24 @@
 \alias{pileup_gr_list}
 \title{Pileup reads, fragments, or cuts from a BAM file over target GRanges regions.}
 \usage{
-pileup_gr_list(gr_list, gr_target, gr_groups = NULL, norm = "PM",
-  window_size = NULL, window_mode = c("max", "mean", "median"))
+pileup_gr_list(gr_list, gr_target, gr_groups = NULL, norm = c("PM",
+  "max"), window_size = NULL, window_mode = c("max", "mean", "median"))
 }
 \arguments{
-\item{window_mode}{}
+\item{gr_list}{A list of GRanges objects}
+
+\item{gr_target}{A single GRanges object for the target region to plot.}
+
+\item{gr_groups}{A vector indicating which group each GRanges object in gr_list belongs to. If NULL, will group all samples into a single track.}
+
+\item{norm}{Normalization for each group. Currently support is per-million ("PM") and "max".}
+
+\item{window_size}{Window bin size to use for region down-sampling. If NULL, will not downsample.}
+
+\item{window_mode}{If using window_size, what value to use for each window. Options are "max","mean", and "median".}
+}
+\value{
+list of data.frames, one per group in gr_groups. Each data.frame has pos (position) and val (value) columns.
 }
 \description{
 Pileup reads, fragments, or cuts from a BAM file over target GRanges regions.

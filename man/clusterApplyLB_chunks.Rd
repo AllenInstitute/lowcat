@@ -17,6 +17,9 @@ clusterApplyLB_chunks(N, n_chunks = 20, cl, FUN, ...)
 
 \item{...}{Additional parameters passed to clusterApplyLB()}
 }
+\value{
+a list object with the outputs of FUN
+}
 \description{
 Run clusterApplyLB across a single variable, N, using chunks with user feedback.
 }

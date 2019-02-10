@@ -2,21 +2,11 @@
 % Please edit documentation in R/distances.R
 \name{run_fragment_overlap_jaccard_parallel_full}
 \alias{run_fragment_overlap_jaccard_parallel_full}
-\title{Compute jaccard similarity values based on GenomicRanges overlaps in parallel.}
+\title{For compatibility with older scripts}
 \usage{
-run_fragment_overlap_jaccard_parallel_full(fragment_list, n_cores = 6,
-  cluster_type = "PSOCK")
-}
-\arguments{
-\item{fragment_list}{The list object containing GenomicRanges objects.}
-
-\item{n_cores}{The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.}
-
-\item{cluster_type}{EXPERIMENTAL: Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.}
-}
-\value{
-a data.frame with results for overlap-based comparisons.
+run_fragment_overlap_jaccard_parallel_full(fragment_list,
+  n_cores = "auto", cluster_type = "PSOCK")
 }
 \description{
-This version returns a data.frame with extended stats for every comparison.
+See ?overlap_jaccard_df for current function.
 }

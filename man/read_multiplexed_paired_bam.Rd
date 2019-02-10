@@ -5,7 +5,7 @@
 \title{Read a multiplexed, paired-end BAM file and convert to a GRanges fragment list}
 \usage{
 read_multiplexed_paired_bam(bam, barcode_start = 1, barcode_end = 32,
-  read_length = 50, remove_duplicates = TRUE)
+  read_length = 50, min_frags = 100, remove_duplicates = TRUE)
 }
 \arguments{
 \item{bam}{A character vector of file locations for the BAM file}
@@ -15,6 +15,8 @@ read_multiplexed_paired_bam(bam, barcode_start = 1, barcode_end = 32,
 \item{barcode_end}{A numeric value indicating where the barcode ends in QNAME (default = 32)}
 
 \item{read_length}{A numeric value indicating the read length (default = 50)}
+
+\item{min_frags}{A numeric value indicating the minimum number of fragments required to retain a barcode (default = 100)}
 
 \item{remove_duplicates}{A logical value indicating whether or not to deduplicate the fragments after demultiplexing (default = FALSE)}
 }

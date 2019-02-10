@@ -1,3 +1,6 @@
+### These are historical functions
+# Still here for reference, but not exported.
+
 makePeakList <- function(peakDir,peakNames) {
 
   peakFiles <- list.files(peakDir)
@@ -447,3 +450,79 @@ plotHyperTests <- function(rpkm,counts=F) {
 }
 
 
+#' # Returns only jd
+#' This version is slower.
+#'
+#' fragment_overlap_jaccard_parallel3 <- function(N) {
+#'   ol <- findOverlaps(fragment_list[[N]],
+#'                       fragment_list[(N+1):length(fragment_list)])
+#'
+#'   ol <- table(subjectHits(ol))
+#'
+#'   n1 <- fragment_lengths[N]
+#'   n2 <- fragment_lengths[(N+1):length(fragment_list)]
+#'
+#'   jd <- 1 - ol / (n1 + n2)
+#'
+#'   matrix(c(jd, rep(N, length(jd))), ncol = 2)
+#' }
+#'
+#' #' Compute jaccard similarity values based on GenomicRanges overlaps in parallel.
+#' #'
+#' #' @param fragment_list The list object containing GenomicRanges objects.
+#' #' @param sample_names Sample names. If NULL, will use BAM file names.
+#' #' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
+#' #' @param cluster_type EXPERIMENTAL: Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.
+#' #'
+#' #' @return a list of GenomicRanges objects
+#' #'
+#' run_fragment_overlap_jaccard_parallel3 <- function(fragment_list,
+#'                                                    n_cores = 6,
+#'                                                    cluster_type = "PSOCK") {
+#'
+#'   fragment_list <- GRangesList(fragment_list)
+#'
+#'   #index_pairs <- t(combn(1:length(fragment_list),2))
+#'   fragment_lengths <- unlist(lapply(fragment_list, length))
+#'
+#'   # Set up parallelization
+#'   if(n_cores == "auto") {
+#'     n_cores <- parallel::detectCores()
+#'   }
+#'
+#'   print(paste("Starting",n_cores,"nodes"))
+#'
+#'   cl <- parallel::makeCluster(n_cores, cluster_type)
+#'
+#'   print("Exporting necessary objects to nodes")
+#'
+#'   parallel::clusterEvalQ(cl, library(GenomicRanges))
+#'   parallel::clusterExport(cl, c("fragment_list",
+#'                                 "fragment_lengths",
+#'                                 "fragment_overlap_jaccard_parallel"),
+#'                           # Use the function's local environment for export
+#'                           envir = environment())
+#'
+#'   N <- length(fragment_list) - 1
+#'
+#'   print(paste("Running",N,"comparisons."))
+#'
+#'   res <- clusterApplyLB_chunks(N = N,
+#'                                n_chunks = 20,
+#'                                cl = cl,
+#'                                FUN = fragment_overlap_jaccard_parallel3)
+#'
+#'   stopCluster(cl)
+#'
+#'   print("Collecting results.")
+#'
+#'   res <- do.call("rbind", res)
+#'   res <- res[,1][order(res[,2])]
+#'
+#'   res_mat <- matrix(0, length(fragment_list), length(fragment_list))
+#'   res_mat[lower.tri(res_mat, diag = FALSE)] <- res
+#'   res_mat <- t(res_mat)
+#'   res_mat[lower.tri(res_mat, diag = FALSE)] <- res
+#'
+#'   return(res_mat)
+#' }
