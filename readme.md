@@ -70,5 +70,17 @@ fragment_list <- read_multiplexed_paired_bam(bam_file,
                                              min_frags = 100,
                                              remove_duplicates = TRUE)
 ```
+## Level of Support
+
+We are planning on occasional updating this tool with no fixed schedule. Community involvement is encouraged through both issues and pull requests.
+
+## License
+
+This code is released under the Allen Institute Software License. See file LICENSE for details.
+
+## Contributions
+
+Any contributions to this repository are subject to the Allen Institute Contribution Agreement. See file CONTRIBUTING.md for details.
+
 
 
