@@ -39,21 +39,20 @@ convert_fragment_list <- function(fragment_list,
 
 #' Pileup reads, fragments, or cuts from a BAM file over target GRanges regions.
 #'
-#' @param gr_list
-#' @param gr_target
-#' @param gr_groups
-#' @param norm
-#' @param window_size
-#' @param window_mode
+#' @param gr_list A list of GRanges objects
+#' @param gr_target A single GRanges object for the target region to plot.
+#' @param gr_groups A vector indicating which group each GRanges object in gr_list belongs to. If NULL, will group all samples into a single track.
+#' @param norm Normalization for each group. Currently support is per-million ("PM") and "max".
+#' @param window_size Window bin size to use for region down-sampling. If NULL, will not downsample.
+#' @param window_mode If using window_size, what value to use for each window. Options are "max","mean", and "median".
 #'
-#' @return
+#' @return list of data.frames, one per group in gr_groups. Each data.frame has pos (position) and val (value) columns.
 #' @export
 #'
-#' @examples
 pileup_gr_list <- function(gr_list,
                            gr_target,
                            gr_groups = NULL,
-                           norm="PM",
+                           norm = c("PM","max"),
                            window_size = NULL,
                            window_mode = c("max","mean","median")) {
 
@@ -62,54 +61,57 @@ pileup_gr_list <- function(gr_list,
     groups <- 1
   } else {
     groups <- unique(gr_groups)
-
   }
 
   out_list <- list()
 
+  gr_target <- gr_target[1]
+  target_chr <- as.character(GenomicRanges::seqnames(gr_target))
+  target_ranges <- GenomicRanges::ranges(gr_target)
+  target_start <- GenomicRanges::start(gr_target)
+  target_end <- GenomicRanges::end(gr_target)
+
   for(i in 1:length(groups)) {
 
     group <- groups[i]
-    pile <- data.frame(pos = start(gr_target):end(gr_target), val = 0)
     group_gr <- gr_list[gr_groups == group]
 
-    for(j in 1:length(group_gr)) {
+    chr_list <- lapply(group_gr,
+                       function(x) {
+                         GenomicRanges::ranges(x[as.character(GenomicRanges::seqnames(x)) == target_chr])
+                       })
 
-      frags <- group_gr[[j]]
+    ol_list <- lapply(chr_list,
+                      function(x) {
+                        IRanges::subsetByOverlaps(x, target_ranges)
+                      })
 
-      ol <- suppressWarnings(as.data.frame(findOverlaps(gr_target,frags)))
-      names(ol) <- c("target_hit","frags_hit")
+    ol_lens <- lapply(ol_list, length)
 
-      if(nrow(ol) > 0) {
+    ol_list <- ol_list[ol_lens > 0]
 
-        target_start <- start(gr_target)
-        target_end <- end(gr_target)
-        target_strand <- as.character(strand(gr_target))
-        target_width <- width(gr_target)
-        frags_start <- start(frags)[ol$frags_hit]
-        frags_end <- end(frags)[ol$frags_hit]
-        frags_width <- width(frags)[ol$frags_hit]
+    if(length(ol_list) == 0) {
+      pile <- data.frame(pos = target_start:target_end,
+                         val = 0)
+    } else {
 
-        for(k in 1:nrow(ol)) {
+      ol_ranges <- ol_list[[1]]
 
-          if(target_strand %in% c("+","*")) {
-            hit_start <- frags_start[k] - target_start + 1
-          } else if (target_strand == "-") {
-            hit_start <- target_end - frags_end[k] + 1
-          }
-          hit_end <- hit_start + frags_width[k] - 1
-
-          if(hit_start < 1) { hit_start <- 1 }
-          if(hit_end > target_width) { hit_end <- target_width }
-
-          if( hit_start <= target_width & hit_end >= 1) {
-            pile$val[hit_start:hit_end] <- pile$val[hit_start:hit_end] + 1
-          }
-
+      if(length(ol_list) > 1) {
+        for(j in 2:length(ol_list)) {
+          ol_ranges <- c(ol_ranges, ol_list[[j]])
         }
       }
 
+      ol_coverage <- IRanges::coverage(ol_ranges,
+                                       shift = -1 * target_start,
+                                       width = target_end - target_start + 1)
+
+      pile <- data.frame(pos = target_start:target_end,
+                         val = rep(ol_coverage@values, ol_coverage@lengths))
+
     }
+
 
     if(!is.null(window_size)) {
       pile <- pile %>%
@@ -138,12 +140,13 @@ pileup_gr_list <- function(gr_list,
     if(norm == "PM") {
       m <- sum(unlist(lapply(group_gr,length)))
       pile$val <- pile$val/m*1e6
+    } else if(norm == "max") {
+      pile$val <- pile$val/max(pile$val)
     }
 
     out_list[[i]] <- pile
-    names(out_list)[i] <- groups[i]
-
   }
+  names(out_list) <- groups
 
 
   if(length(groups) == 1) {
@@ -154,20 +157,38 @@ pileup_gr_list <- function(gr_list,
 
 }
 
+
+#' Build a multi-track pileup plot
+#'
+#' @param gr_list A list of GRanges objects
+#' @param ucsc_loc A target location, in UCSC format (e.g. "chr1:533,235-552,687)
+#' @param highlight_loc A location to use for highlights in UCSC format
+#' @param padding A 2-element numeric vector with upstream and downstream padding around the ucsc_loc to extend the plotting window.
+#' @param gr_groups A vector indicating which group each GRanges object in gr_list belongs to. If NULL, will group all samples into a single track.
+#' @param group_colors A named vector, one per group, with colors for each group. Names should match values in gr_groups.
+#' @param norm Normalization for each group. Currently support is per-million ("PM") and "max".
+#' @param max_val A maximum value to use for scaling the y-values in each track.
+#' @param window_size Window bin size to use for region down-sampling. If NULL, will not downsample.
+#' @param window_mode If using window_size, what value to use for each window. Options are "max","mean", and "median".
+#' @param target_color The color of the background rectangle to highlight the region in ucsc_loc.
+#' @param highlight_color The color the background rectangle to highlight the region in highlight_loc.
+#'
+#' @return A ggplot2 plot object
+#' @export
 build_pile_plot <- function(gr_list,
                             ucsc_loc,
                             highlight_loc = NULL,
                             padding = c(1e5,1e5),
                             gr_groups = NULL,
                             group_colors = NULL, #named vector
-                            norm = "PM",
+                            norm = c("PM","max"),
                             max_val = NULL,
                             window_size = NULL,
                             window_mode = c("max","mean","median"),
                             target_color = "#B7B7B7",
                             highlight_color = "#F9ED32") {
 
-  gr_target <- ucsc_loc_to_gr(ucsc_loc)
+  gr_target <- ucsc_loc_to_GRanges(ucsc_loc)
   target_start <- start(gr_target)
   target_end <- end(gr_target)
 
@@ -175,11 +196,11 @@ build_pile_plot <- function(gr_list,
   end(gr_target) <- end(gr_target) + padding[2]
 
   piles <- pileup_gr_list(gr_list,
-                          gr_target,
-                          gr_groups,
-                          norm,
-                          window_size,
-                          window_mode)
+                           gr_target,
+                           gr_groups,
+                           norm,
+                           window_size,
+                           window_mode)
 
   target_rect <- data.frame(xmin = target_start,
                             xmax = target_end,
@@ -205,7 +226,7 @@ build_pile_plot <- function(gr_list,
                   fill = fill))
 
   if(!is.null(highlight_loc)) {
-    hi_target <- ucsc_loc_to_gr(highlight_loc)
+    hi_target <- ucsc_loc_to_GRanges(highlight_loc)
     hi_start <- start(hi_target)
     hi_end <- end(hi_target)
 
@@ -231,13 +252,8 @@ build_pile_plot <- function(gr_list,
     pile <- piles[[i]]
     pile_color <- group_colors[names(group_colors) == names(piles)[i]]
 
-    pile$val <- i + pile$val / max_val
-    pile$min <- i
-
-    pile$val[pile$val > i + 1] <- i + 1
-
-    baseline <- data.frame(x = min(pile$pos),
-                           xend = max(pile$pos),
+    baseline <- data.frame(x = start(gr_target),
+                           xend = end(gr_target),
                            y = i,
                            yend = i,
                            color = pile_color)
@@ -247,16 +263,46 @@ build_pile_plot <- function(gr_list,
                    aes(x = x, xend = xend,
                        y = y, yend = y,
                        color = color),
-                   size = 0.1) +
-      geom_ribbon(data = pile,
-                  aes(x = pos, ymin = min, ymax = val),
-                  color = NA,
-                  fill = pile_color)
+                   size = 0.1)
+
+    if(!is.null(pile)) {
+      pile$val <- i + pile$val / max_val
+      pile$min <- i
+
+      pile$val[pile$val > i + 1] <- i + 1
+      pile_plot <- pile_plot +
+        geom_ribbon(data = pile,
+                    aes(x = pos, ymin = min, ymax = val),
+                    color = NA,
+                    fill = pile_color)
+    }
+
+
+
+
   }
 
   pile_plot
 }
 
+#' Build a multi-track pileup heatmap
+#'
+#' @param gr_list A list of GRanges objects
+#' @param ucsc_loc A target location, in UCSC format (e.g. "chr1:533,235-552,687)
+#' @param highlight_loc A location to use for highlights in UCSC format
+#' @param padding A 2-element numeric vector with upstream and downstream padding around the ucsc_loc to extend the plotting window.
+#' @param gr_groups A vector indicating which group each GRanges object in gr_list belongs to. If NULL, will group all samples into a single track.
+#' @param colorset A vector of colors used to generate the heamtap colorscale. Default is c("white","black")
+#' @param norm Normalization for each group. Currently support is per-million ("PM") and "max".
+#' @param max_val A maximum value to use for scaling the y-values in each track.
+#' @param window_size Window bin size to use for region down-sampling. If NULL, will not downsample.
+#' @param window_mode If using window_size, what value to use for each window. Options are "max","mean", and "median".
+#' @param target_color The color of the background rectangle to highlight the region in ucsc_loc.
+#' @param highlight_color The color the background rectangle to highlight the region in highlight_loc.
+#' @param baselines Logical, whether or not to separate tracks with a line.
+#'
+#' @return A ggplot2 plot object
+#' @export
 build_pile_heatmap <- function(gr_list,
                                ucsc_loc,
                                highlight_loc = NULL,
@@ -271,7 +317,7 @@ build_pile_heatmap <- function(gr_list,
                                highlight_color = "#F9ED32",
                                baselines = TRUE) {
 
-  gr_target <- ucsc_loc_to_gr(ucsc_loc)
+  gr_target <- ucsc_loc_to_GRanges(ucsc_loc)
   target_start <- start(gr_target)
   target_end <- end(gr_target)
 
@@ -309,7 +355,7 @@ build_pile_heatmap <- function(gr_list,
                   fill = fill))
 
   if(!is.null(highlight_loc)) {
-    hi_target <- ucsc_loc_to_gr(highlight_loc)
+    hi_target <- ucsc_loc_to_GRanges(highlight_loc)
     hi_start <- start(hi_target)
     hi_end <- end(hi_target)
 

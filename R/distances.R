@@ -1,25 +1,16 @@
-varibow <- function(n_colors) {
-  sats <- rep_len(c(0.55,0.7,0.85,1),length.out = n_colors)
-  vals <- rep_len(c(1,0.8,0.6),length.out = n_colors)
-  sub("FF$","",rainbow(n_colors, s = sats, v = vals))
-}
-
-better_rainbow <- function(...) {
-  varibow(...)
-}
-
-
-
 #' Linking function for computing jaccard similarity scores based on GenomicRanges overlaps in parallel.
 #'
-#' @param N Index of the comparison to compute
+#' This version returns a data.frame with extended stats for every comparison.
 #'
-fragment_overlap_jaccard_parallel <- function(N) {
+#' @param N Index of the comparison to compute
+#' @export
+#'
+overlap_jaccard_df_fun <- function(N) {
   s1 <- index_pairs[N,1]
   s2 <- index_pairs[N,2]
 
-  ol <- sum(countOverlaps(fragment_list[[s1]],
-                          fragment_list[[s2]]) > 0)
+  ol <- sum(GenomicRanges::countOverlaps(fragment_list[[s1]],
+                                         fragment_list[[s2]]) > 0)
 
   n1 <- length(fragment_list[[s1]])
   n2 <- length(fragment_list[[s2]])
@@ -42,61 +33,166 @@ fragment_overlap_jaccard_parallel <- function(N) {
 
 #' Compute jaccard similarity values based on GenomicRanges overlaps in parallel.
 #'
+#' This version returns a data.frame with extended stats for every comparison.
+#'
+#' For a more streamlined version that returns only a matrix of distances, see ?overlap_jaccard_mat.
+#'
 #' @param fragment_list The list object containing GenomicRanges objects.
-#' @param sample_names Sample names. If NULL, will use BAM file names.
-#' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
-#' @param cluster_type EXPERIMENTAL: Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.
+#' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is "auto".
+#' @param cluster_type Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.
 #'
-#' @return a list of GenomicRanges objects
+#' @return a data.frame with results for overlap-based comparisons:
 #'
-run_fragment_overlap_jaccard_parallel <- function(fragment_list,
-                                                  n_cores = 6,
-                                                  cluster_type = "PSOCK") {
-
-  library(data.table)
+#' @export
+overlap_jaccard_df <- function(fragment_list,
+                               n_cores = "auto",
+                               cluster_type = "PSOCK") {
 
   index_pairs <- as.data.frame(t(combn(1:length(fragment_list),2)))
+  N <- nrow(index_pairs)
 
   # Set up parallelization
   if(n_cores == "auto") {
-    n_cores <- detectCores()
+    n_cores <- parallel::detectCores()
   }
 
-  print(paste("Starting",n_cores,"clusters"))
+  if(n_cores == 1) {
+    res <- purrr::map(1:N,
+                      overlap_jaccard_df_fun)
+  } else {
+    print(paste("Starting",n_cores,"nodes"))
 
-  cl <- makeCluster(n_cores, cluster_type)
+    cl <- parallel::makeCluster(n_cores, cluster_type)
 
-  print("Exporting necessary objects to clusters")
+    print("Exporting necessary objects to nodes")
 
-  clusterEvalQ(cl, library(GenomicRanges))
-  clusterExport(cl, c("index_pairs","fragment_list",
-                      "fragment_overlap_jaccard_parallel"),
-                # Use the function's local environment for export
-                envir = environment())
+    parallel::clusterEvalQ(cl, library(GenomicRanges))
+    parallel::clusterExport(cl, c("index_pairs","fragment_list",
+                                  "fragment_overlap_jaccard_parallel"),
+                            # Use the function's local environment for export
+                            envir = environment())
 
-  N <- nrow(index_pairs)
 
-  print(paste("Running",N,"comparisons."))
+    print(paste("Running",N,"comparisons."))
 
-  res <- clusterApplyLB_chunks(N = N,
-                               n_chunks = 20,
-                               cl = cl,
-                               FUN = fragment_overlap_jaccard_parallel)
+    res <- clusterApplyLB_chunks(N = N,
+                                 n_chunks = 20,
+                                 cl = cl,
+                                 FUN = overlap_jaccard_df_fun)
 
-  stopCluster(cl)
+    parallel::stopCluster(cl)
 
+
+  }
   print("Collecting results.")
 
-  results <- rbindlist(res)
+  results <- data.table::rbindlist(res)
 
   return(results)
 }
 
+#' For compatibility with older scripts
+#'
+#' See ?overlap_jaccard_df for current function.
+#' @export
+run_fragment_overlap_jaccard_parallel_full <- overlap_jaccard_df
+
+#' Linking function for computing jaccard similarity scores based on GenomicRanges overlaps in parallel.
+#'
+#' @param N Index of the comparison to compute
+#' @export
+overlap_jaccard_mat_fun <- function(N) {
+  s1 <- index_pairs[N,1]
+  s2 <- index_pairs[N,2]
+
+  ol <- sum(GenomicRanges::countOverlaps(fragment_list[[s1]],
+                                         fragment_list[[s2]]) > 0)
+
+  n1 <- fragment_lengths[s1]
+  n2 <- fragment_lengths[s2]
+
+  jd <- 1 - (ol / (n1 + n2))
+
+  c(jd, N)
+}
+
+#' Compute jaccard similarity values based on GenomicRanges overlaps in parallel.
+#'
+#' @param fragment_list The list object containing GenomicRanges objects.
+#' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
+#' @param cluster_type Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.
+#'
+#' @return a matrix of jaccard distances
+#' @export
+overlap_jaccard_mat <- function(fragment_list,
+                                n_cores = "auto",
+                                cluster_type = "PSOCK") {
+
+  index_pairs <- t(combn(1:length(fragment_list),2))
+  fragment_lengths <- purrr::map_int(fragment_list, length)
+  N <- nrow(index_pairs)
+
+  # Set up parallelization
+  if(n_cores == "auto") {
+    n_cores <- parallel::detectCores()
+  }
+
+  if(n_cores == 1) {
+    res <- purrr::map(1:N,
+                      overlap_jaccard_mat_fun)
+  } else {
+
+    print(paste("Starting",n_cores,"nodes"))
+
+    cl <- parallel::makeCluster(n_cores, cluster_type)
+
+    print("Exporting necessary objects to nodes")
+
+    parallel::clusterEvalQ(cl, library(GenomicRanges))
+    parallel::clusterExport(cl, c("index_pairs","fragment_list",
+                                  "fragment_lengths",
+                                  "fragment_overlap_jaccard_parallel"),
+                            # Use the function's local environment for export
+                            envir = environment())
+
+
+    print(paste("Running",N,"comparisons."))
+
+    res <- clusterApplyLB_chunks(N = N,
+                                 n_chunks = 20,
+                                 cl = cl,
+                                 FUN = overlap_jaccard_mat_fun)
+
+    stopCluster(cl)
+  }
+
+
+  print("Collecting results.")
+
+  res <- matrix(unlist(res), ncol = 2, byrow = TRUE)
+  res <- res[,1][order(res[,2])]
+
+  res_mat <- matrix(0, length(fragment_list), length(fragment_list))
+  res_mat[lower.tri(res_mat, diag = FALSE)] <- res
+  res_mat <- t(res_mat)
+  res_mat[lower.tri(res_mat, diag = FALSE)] <- res
+
+  rownames(res_mat) <- colnames(res_mat) <- names(fragment_list)
+
+  return(res_mat)
+}
+
+#' For compatibility with older scripts
+#'
+#' See ?overlap_jaccard_mat for current function.
+#' @export
+run_fragment_overlap_jaccard_parallel <- overlap_jaccard_mat
+
 #' Linking function for computing jaccard similarity scores based on window overlaps in parallel.
 #'
 #' @param N Index of the comparison to compute
-#'
-window_overlap_jaccard_parallel <- function(N) {
+#' @export
+window_jaccard_df_fun <- function(N) {
   s1 <- index_pairs[N,1]
   s2 <- index_pairs[N,2]
 
@@ -140,68 +236,79 @@ window_overlap_jaccard_parallel <- function(N) {
 #'
 #' @param fragment_list The list object containing genomic windows.
 #' @param n_cores The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.
+#' @param cluster_type Either "PSOCK" (for Windows) or "FORK" (possible on Linux and Mac). FORK is more memory-efficient.
 #'
 #' @return a list of GenomicRanges objects
-#'
-run_window_overlap_jaccard_parallel <- function(window_list,
-                                                n_cores = 6) {
-
-  library(data.table)
+#' @export
+window_jaccard_df <- function(window_list,
+                              n_cores = "auto",
+                              cluster_type = "PSOCK") {
 
   index_pairs <- as.data.frame(t(combn(1:length(window_list),2)))
+  N <- nrow(index_pairs)
 
   # Set up parallelization
   if(n_cores == "auto") {
-    n_cores <- detectCores()
+    n_cores <- parallel::detectCores()
   }
 
-  print(paste("Starting",n_cores,"nodes"))
+  if(n_cores == 1) {
+    res <- purrr::map(1:N,
+                      window_jaccard_df_fun)
+  } else {
 
-  cl <- makeCluster(n_cores)
+    print(paste("Starting",n_cores,"nodes"))
 
-  print("Exporting necessary objects to nodes")
+    cl <- parallel::makeCluster(n_cores, cluster_type)
 
-  clusterEvalQ(cl, library(GenomicRanges))
-  clusterExport(cl, c("index_pairs","window_list",
-                      "window_overlap_jaccard_parallel"),
-                # Use the function's local environment for export
-                envir = environment())
+    print("Exporting necessary objects to nodes")
 
-  N <- nrow(index_pairs)
+    parallel::clusterExport(cl,
+                            c("index_pairs","window_list",
+                              "window_overlap_jaccard_parallel"),
+                            # Use the function's local environment for export
+                            envir = environment())
 
-  res <- clusterApplyLB_chunks(N = N,
-                               n_chunks = 20,
-                               cl = cl,
-                               FUN = window_overlap_jaccard_parallel)
 
-  stopCluster(cl)
+    res <- clusterApplyLB_chunks(N = N,
+                                 n_chunks = 20,
+                                 cl = cl,
+                                 FUN = window_jaccard_df_fun)
 
-  results <- rbindlist(res)
+    parallel::stopCluster(cl)
 
+  }
+
+  results <- data.table::rbindlist(res)
 
 }
 
-#' Convert parallel jaccard similarity results from data.frame to a matrix
+#' For compatibility with older scripts
 #'
-#' @param res The results from run_fragment_overlap_jaccard_parallel() or run_window_overlap_jaccard_parallel()
+#' See ?window_jaccard_df for current function.
+#' @export
+run_window_overlap_jaccard_parallel <- window_jaccard_df
+
+#' Convert jaccard similarity results from data.frame-based functions to a matrix
+#'
+#' @param res The results from overlap_jaccard_df() or window_jaccard_df()
 #'
 #' @return a jaccard distance matrix
-#'
+#' @export
 res_to_distance_matrix <- function(res) {
 
-  n_samples <- max(res$s2)
+  res <- res[order(res[,1], res[,2]),]
 
+  n_samples <- max(res$s2[res$s1 == 1])
   res_names <- c(res$s1_name[1],res$s2_name[1:(n_samples - 1)])
 
-  res_matrix <- matrix(0,ncol = n_samples, nrow = n_samples)
+  res_mat <- matrix(0, n_samples, n_samples)
+  res_mat[lower.tri(res_mat, diag = FALSE)] <- res$jaccard_distance
+  res_mat <- t(res_mat)
+  res_mat[lower.tri(res_mat, diag = FALSE)] <- res$jaccard_distance
 
-  for(i in 1:nrow(res)) {
-    res_matrix[res$s1[i], res$s2[i]] <- res$jaccard_distance[i]
-    res_matrix[res$s2[i], res$s1[i]] <- res$jaccard_distance[i]
-  }
+  rownames(res_mat) <- res_names
+  colnames(res_mat) <- res_names
 
-  rownames(res_matrix) <- res_names
-  colnames(res_matrix) <- res_names
-
-  res_matrix
+  res_mat
 }

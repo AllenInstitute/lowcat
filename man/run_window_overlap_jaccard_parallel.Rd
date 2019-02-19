@@ -2,18 +2,11 @@
 % Please edit documentation in R/distances.R
 \name{run_window_overlap_jaccard_parallel}
 \alias{run_window_overlap_jaccard_parallel}
-\title{Compute jaccard similarity values based on window overlaps in parallel.}
+\title{For compatibility with older scripts}
 \usage{
-run_window_overlap_jaccard_parallel(window_list, n_cores = 6)
-}
-\arguments{
-\item{n_cores}{The number of cores to use in parallel. Use "auto" to detect and use all cores. Default is 6.}
-
-\item{fragment_list}{The list object containing genomic windows.}
-}
-\value{
-a list of GenomicRanges objects
+run_window_overlap_jaccard_parallel(window_list, n_cores = "auto",
+  cluster_type = "PSOCK")
 }
 \description{
-Compute jaccard similarity values based on window overlaps in parallel.
+See ?window_jaccard_df for current function.
 }

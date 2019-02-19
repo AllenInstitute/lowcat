@@ -4,7 +4,7 @@
 #' @param n_chunks number of chunks
 #'
 #' @return a character object.
-#'
+#' @export
 percent_display <- function(i, n_chunks) {
   paste0(floor(i/n_chunks * 100),"%")
 }
@@ -16,7 +16,7 @@ percent_display <- function(i, n_chunks) {
 #' @param start_time The start time of the first chunk
 #'
 #' @return a character object.
-#'
+#' @export
 time_display <- function(i, n_chunks, start_time) {
   current_time <- Sys.time()
   time_diff <- current_time - start_time
@@ -34,6 +34,16 @@ time_display <- function(i, n_chunks, start_time) {
   paste0(percent_display(i, n_chunks), " took ",time_num," ",time_units,". Estimated ",est_time_remain," ",time_units," remaining.          ")
 }
 
+#' cat for replaceable messages
+#'
+#' @param ... Passed to cat()
+#'
+#' @export
+cat_update <- function(...) {
+  cat("\r", ...)
+  flush.console()
+}
+
 #' Run clusterApplyLB across a single variable, N, using chunks with user feedback.
 #'
 #' @param N Variable passed to nodes running FUN
@@ -42,6 +52,8 @@ time_display <- function(i, n_chunks, start_time) {
 #' @param FUN The function to run using clusterApplyLB()
 #' @param ... Additional parameters passed to clusterApplyLB()
 #'
+#' @return a list object with the outputs of FUN
+#' @export
 clusterApplyLB_chunks <- function(N,
                                   n_chunks = 20,
                                   cl, FUN, ...) {
@@ -54,7 +66,7 @@ clusterApplyLB_chunks <- function(N,
   start_time <- Sys.time()
 
   for(i in 1:n_chunks) {
-    chunk_res <- clusterApplyLB(cl, chunk_starts[i]:chunk_ends[i], FUN, ...)
+    chunk_res <- parallel::clusterApplyLB(cl, chunk_starts[i]:chunk_ends[i], FUN, ...)
     res <- c(res, chunk_res)
     cat("\r",time_display(i, n_chunks, start_time))
     flush.console()

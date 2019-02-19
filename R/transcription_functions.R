@@ -170,6 +170,7 @@ region_fragment_count_neighbors <- function(fragment_list,
 #' @param method The name of the method to pass to cor(). Can be "pearson", "kendall", or "spearman". Default is "pearson".
 #'
 #' @return a data.frame with 3 columns: query, max_cor, and target.
+#' @export
 #'
 max_column_correlation <- function(query_mat,
                                    target_mat,
@@ -205,6 +206,7 @@ max_column_correlation <- function(query_mat,
 #'
 #' @return a matrix with all correlation values, with the columns matching columns of target_mat,
 #' and rows matching the columns of query_mat
+#' @export
 #'
 all_column_correlation <- function(query_mat,
                                    target_mat,
