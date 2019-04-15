@@ -70,9 +70,9 @@ combine_group_GRanges <- function(fragment_list,
 #' @export
 #'
 compare_fragment_lists <- function(query_regions,
-                                  target_regions,
-                                  mode = c("counts","coverage"),
-                                  norm = c("none","query","target","total")) {
+                                   target_regions,
+                                   mode = c("counts","coverage"),
+                                   norm = c("none","query","target","total")) {
 
   mode <- match.arg(mode, c("counts","coverage"))
   norm <- match.arg(norm, c("none","query","target","total"))

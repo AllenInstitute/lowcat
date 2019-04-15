@@ -14,10 +14,11 @@ Imports:
     GenomicAlignments,
     GenomicRanges,
     IRanges,
+    Matrix,
     parallel (>= 3.4.3),
     purrr (>= 0.2.4),
     rbamtools (>= 2.16.0),
     Rsamtools
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Suggests: 
     testthat

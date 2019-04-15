@@ -5,7 +5,7 @@
 \title{Count the number of times a list of GenomicRanges objects overlaps another list of GenomicRanges objects.}
 \usage{
 count_fragment_overlaps(fragment_list, target_GRanges, binarize = TRUE,
-  aggregate = FALSE)
+  sparse = FALSE, aggregate = FALSE)
 }
 \arguments{
 \item{fragment_list}{The list object containing GenomicRanges objects.}
@@ -14,11 +14,16 @@ count_fragment_overlaps(fragment_list, target_GRanges, binarize = TRUE,
 
 \item{binarize}{Logical indicating whether to retain count values for each region on count overlaps as binary. Default is TRUE.}
 
-\item{aggregate}{Logical indicating whether to return a matrix of counts or a vector of count sums.}
+\item{sparse}{Logical indicating if the results matrix should be a sparse dgCMatrix. Only used if aggregate is FALSE. Default is FALSE.}
+
+\item{aggregate}{Logical indicating whether to return a matrix of counts or a vector of count sums. Default is FALSE.}
 }
 \value{
 If aggregate == TRUE, a vector with the total count of overlaps between each object in fragment_list and all objects in target_GRanges.
-If aggregate == FALSE, a matrix with count values for overlaps between each object in fragment_list (as columns) and each object in target_GRanges (as rows).
+
+If aggregate == FALSE & sparse = FALSE, a matrix with count values for overlaps between each object in fragment_list (as columns) and each object in target_GRanges (as rows).
+
+if aggregate == FALSE & sparse == TRUE, a dgCMatrix with count values for overlaps with each fragment_list as columns and each object in the target_GRanges as rows.
 }
 \description{
 Count the number of times a list of GenomicRanges objects overlaps another list of GenomicRanges objects.

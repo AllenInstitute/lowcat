@@ -354,20 +354,39 @@ collapse_fragment_list <- function(fragment_list,
 #' @param fragment_list The list object containing GenomicRanges objects.
 #' @param target_GRanges A second list of GenomicRanges objects.
 #' @param binarize Logical indicating whether to retain count values for each region on count overlaps as binary. Default is TRUE.
-#' @param aggregate Logical indicating whether to return a matrix of counts or a vector of count sums.
+#' @param aggregate Logical indicating whether to return a matrix of counts or a vector of count sums. Default is FALSE.
+#' @param sparse Logical indicating if the results matrix should be a sparse dgCMatrix. Only used if aggregate is FALSE. Default is FALSE.
 #'
 #' @return If aggregate == TRUE, a vector with the total count of overlaps between each object in fragment_list and all objects in target_GRanges.
-#' If aggregate == FALSE, a matrix with count values for overlaps between each object in fragment_list (as columns) and each object in target_GRanges (as rows).
+#'
+#' If aggregate == FALSE & sparse = FALSE, a matrix with count values for overlaps between each object in fragment_list (as columns) and each object in target_GRanges (as rows).
+#'
+#' if aggregate == FALSE & sparse == TRUE, a dgCMatrix with count values for overlaps with each fragment_list as columns and each object in the target_GRanges as rows.
+#'
 #' @export
+#'
 count_fragment_overlaps <- function(fragment_list,
                                     target_GRanges,
                                     binarize = TRUE,
+                                    sparse = FALSE,
                                     aggregate = FALSE) {
 
-  out_mat <- matrix(nrow=length(target_GRanges),
+  if(aggregate) {
+    out <- vector(length(fragment_list))
+    names(out) <- names(fragment_list)
+  } else {
+    if(sparse) {
+      out <- Matrix::sparseMatrix(i = integer(0),
+                                  j = integer(0),
+                                  dim = c(length(target_GRanges),
+                                          length(fragment_list)))
+    } else {
+      out <- matrix(nrow=length(target_GRanges),
                     ncol=length(fragment_list))
-  colnames(out_mat) <- names(fragment_list)
-  rownames(out_mat) <- names(target_GRanges)
+    }
+    colnames(out_mat) <- names(fragment_list)
+    rownames(out_mat) <- names(target_GRanges)
+  }
 
   for(i in 1:length(fragment_list)) {
 
@@ -377,20 +396,22 @@ count_fragment_overlaps <- function(fragment_list,
     }
 
     if(binarize) {
-      out_mat[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0
+      if(aggregate) {
+        out[i] <- sum(GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0)
+      } else {
+        out[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0
+      }
     } else {
-      out_mat[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
+      if(aggregate) {
+        out[i] <- sum(GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]))
+      } else {
+        out_mat[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
+      }
     }
 
   }
 
-  if(aggregate) {
-    out_vals <- rowSums(out_mat)
-    out_vals
-  } else {
-    out_mat
-  }
-
+  out
 }
 
 #' Linking function for running pe_to_frag in parallel mode.
