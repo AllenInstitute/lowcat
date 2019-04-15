@@ -17,7 +17,7 @@ if(!"BiocManager" %in% installed.packages()) {
 
 bioc_packages <- c("GenomicAlignments",
                    "GenomicRanges",
-                   "rsamtools",
+                   "Rsamtools",
                    "rtracklayer")
 
 missing_bioc_packages <- setdiff(bioc_packages, installed.packages())
@@ -70,6 +70,72 @@ fragment_list <- read_multiplexed_paired_bam(bam_file,
                                              min_frags = 100,
                                              remove_duplicates = TRUE)
 ```
+
+## Downsampling and extending fragments
+
+Once loaded, we usually evenly downsample our fragments for each cell for analysis:
+```
+downsample_n <- 1e4
+
+downsampled_fragments <- downsampled_fragments(bam_fragments,
+                                               downsample_n = downsample_n,
+                                               discard_if_too_few = TRUE)
+
+```
+
+With an equal number of fragments, we next extend each fragment to an accessible region, and collapse any overlapping regions *within* each sample:
+```
+region_width <- 1e3
+
+downsampled_regions <- expand_fragments(downsampled_fragments,
+                                        width = region_width,
+                                        collapse = TRUE)
+```
+
+## Counting overlaps between cells
+
+After expanding to accessible regions per sample, we can compute the overlaps between every pair of cells. `lowcat` uses the `parallel` package to increase the speed of these calculations, but there are a few considerations for this algorithm.
+
+1. This algorithm is not super well optimized. In my hands, each comparison takes ~13ms. You can estimate how long it will take using:
+```
+estimate_time <- function(n_samples, n_cores) {
+  n_comparisons <- n_samples^2 - n_samples
+  comparisons_per_core <- n_comparisons / n_cores
+  total_s <- comparisons_per_core * 13 / 1000
+  total_h <- round(total_s / 3600,4)
+  
+  cat(total_h,"hours\n")
+}
+```
+Note that this does not include the time required to initialize paralellization and gather results.
+
+2. If you're on Windows, you'll need to set the `cluster_type` parameter to `"PSOCK"`, and each core will need its own copy of the `downsampled_regions` list in RAM. You'll need to make sure you have enough RAM to allow these copies.
+
+Most of the downstream analysis functions require only a matrix of Jaccard distances, which can be computed using `overlap_jaccard_mat()`.
+
+On Windows, this will run the Jaccard overlaps in parallel:
+```
+jaccard_results <- overlap_jaccard_mat(downsampled_regions,
+                                       n_cores = 8,
+                                       cluster_type = "PSOCK")
+```
+
+On Linux or Mac, use `"FORK"` paralellization, which is more memory efficient:
+```
+jaccard_results <- overlap_jaccard_mat(downsampled_regions,
+                                       n_cores = 8,
+                                       cluster_type = "FORK")
+```
+
+If you would like more detailed results for each comparison, including the number of reads in each sample and in their intersection, use `overlap_jaccard_df()`, which returns more detailed statistics. This can later be coerced to a matrix with `jaccard_df_to_mat()`:
+```
+jaccard_results_df <- overlap_jaccard_df(downsampled_regions,
+                                         n_cores = 8,
+                                         cluster_type = "PSOCK")
+
+jaccard_results <- jaccard_df_to_mat(jaccard_results_df)
+```
+
 ## Level of Support
 
 We are planning on occasional updating this tool with no fixed schedule. Community involvement is encouraged through both issues and pull requests.

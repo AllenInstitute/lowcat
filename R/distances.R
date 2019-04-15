@@ -295,7 +295,7 @@ run_window_overlap_jaccard_parallel <- window_jaccard_df
 #'
 #' @return a jaccard distance matrix
 #' @export
-res_to_distance_matrix <- function(res) {
+jaccard_df_to_mat <- function(res) {
 
   res <- res[order(res[,1], res[,2]),]
 
@@ -312,3 +312,9 @@ res_to_distance_matrix <- function(res) {
 
   res_mat
 }
+
+#' For compatibility with older scripts
+#'
+#' See ?jaccard_df_to_mat for current function.
+#' @export
+res_to_distance_matrix <- jaccard_df_to_mat
