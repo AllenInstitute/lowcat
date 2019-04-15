@@ -171,8 +171,8 @@ count_fragment_overlaps <- function(fragment_list,
       out <- matrix(nrow=length(target_GRanges),
                     ncol=length(fragment_list))
     }
-    colnames(out_mat) <- names(fragment_list)
-    rownames(out_mat) <- names(target_GRanges)
+    colnames(out) <- names(fragment_list)
+    rownames(out) <- names(target_GRanges)
   }
 
   for(i in 1:length(fragment_list)) {
@@ -192,7 +192,7 @@ count_fragment_overlaps <- function(fragment_list,
       if(aggregate) {
         out[i] <- sum(GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]))
       } else {
-        out_mat[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
+        out[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
       }
     }
 
