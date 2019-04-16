@@ -167,6 +167,7 @@ count_fragment_overlaps <- function(fragment_list,
                                   j = integer(0),
                                   dims = c(length(target_GRanges),
                                           length(fragment_list)))
+      out <- as(out, "dgCMatrix")
     } else {
       out <- matrix(nrow=length(target_GRanges),
                     ncol=length(fragment_list))
