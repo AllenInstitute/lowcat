@@ -166,7 +166,7 @@ count_fragment_overlaps <- function(fragment_list,
       out <- Matrix::sparseMatrix(i = integer(0),
                                   j = integer(0),
                                   dims = c(length(target_GRanges),
-                                          length(fragment_list)))
+                                           length(fragment_list)))
       out <- as(out, "dgCMatrix")
     } else {
       out <- matrix(nrow=length(target_GRanges),
@@ -187,13 +187,32 @@ count_fragment_overlaps <- function(fragment_list,
       if(aggregate) {
         out[i] <- sum(GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0)
       } else {
-        out[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0
+        if(sparse) {
+          new_i <- which(GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0)
+          new_count <- length(new_i)
+          out@x <- c(out@x, rep(1, new_count))
+          out@i <- c(out@i, new_i)
+          out@p[i+1] <- max(out@p) + new_count
+        } else {
+          out[GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0, i] <- 1
+        }
       }
     } else {
       if(aggregate) {
         out[i] <- sum(GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]))
       } else {
-        out[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
+        if(sparse) {
+          ol <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
+          new_i <- which(ol > 0)
+          new_count <- length(new_i)
+          new_x <- ol[new_i]
+
+          out@x <- c(out@x, new_x)
+          out@i <- c(out@i, new_i)
+          out@p[i+1] <- max(out@p) + new_count
+        } else {
+          out[, i] <- GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]])
+        }
       }
     }
 
