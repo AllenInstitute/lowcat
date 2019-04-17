@@ -136,7 +136,7 @@ region_fragment_count_neighbors <- function(fragment_list,
 
 
 
-#' Count the number of times a list of GenomicRanges objects overlaps a GenomicRanges objects.
+#' Count the number of times a list of GenomicRanges objects overlaps a GenomicRanges object.
 #'
 #' @param fragment_list The list object containing GenomicRanges objects.
 #' @param target_GRanges A second list of GenomicRanges objects.
@@ -144,11 +144,11 @@ region_fragment_count_neighbors <- function(fragment_list,
 #' @param aggregate Logical indicating whether to return a matrix of counts or a vector of count sums. Default is FALSE.
 #' @param sparse Logical indicating if the results matrix should be a sparse dgCMatrix. Only used if aggregate is FALSE. Default is FALSE.
 #'
-#' @return If aggregate == TRUE, a vector with the total count of overlaps between each object in fragment_list and all objects in target_GRanges.
+#' @return If aggregate == TRUE, a vector with the total count of overlaps between each object in fragment_list and all regions in target_GRanges.
 #'
-#' If aggregate == FALSE & sparse = FALSE, a matrix with count values for overlaps between each object in fragment_list (as columns) and each object in target_GRanges (as rows).
+#' If aggregate == FALSE & sparse = FALSE, a matrix with count values for overlaps between each object in fragment_list (as columns) and each region in target_GRanges (as rows).
 #'
-#' if aggregate == FALSE & sparse == TRUE, a dgCMatrix with count values for overlaps with each fragment_list as columns and each object in the target_GRanges as rows.
+#' if aggregate == FALSE & sparse == TRUE, a dgCMatrix with count values for overlaps with each fragment_list as columns and each region in the target_GRanges as rows.
 #'
 #' @export
 #'

@@ -583,6 +583,7 @@ merge_bam_files <- function(bam_files,
 #' @return a lis of GenomicRanges objects with all members of each cluster downsampled to the
 #' minimum number of reads of all cluster members.
 #' @export
+#'
 balance_fragment_clusters <- function(fragment_list,
                                       clusters) {
   unique_clusters <- unique(clusters)
@@ -607,6 +608,7 @@ balance_fragment_clusters <- function(fragment_list,
 #' @param bed A data.frame with columns chr, start, end, name, strand, and score.
 #'
 #' @return A GenomicRanges object
+#' @export
 #'
 bed_to_GRanges <- function(bed) {
   library(GenomicRanges)
@@ -625,6 +627,7 @@ bed_to_GRanges <- function(bed) {
 #' @param gr A GenomicRanges object
 #'
 #' @return a data.frame with chr, start, end, and strand.
+#' @export
 #'
 GRanges_to_bed <- function(gr) {
   bed <- data.frame(chr = seqnames(gr),
@@ -643,6 +646,7 @@ GRanges_to_bed <- function(gr) {
 #' @param ucsc_loc A vector of UCSC-like genomic locations. Example: "chr1:152,548,974-152,550,854"
 #'
 #' @return a GenomicRanges object for the UCSC locations
+#' @export
 #'
 ucsc_loc_to_GRanges <- function(ucsc_loc) {
   chr <- sub(":.+","",ucsc_loc)
@@ -660,6 +664,7 @@ ucsc_loc_to_GRanges <- function(ucsc_loc) {
 #' @param gr A GenomicRanges object
 #'
 #' @return a character vector of UCSC browser locations
+#' @export
 #'
 GRanges_to_ucsc_loc <- function(gr) {
   paste0(seqnames(gr), ":",
@@ -672,6 +677,7 @@ GRanges_to_ucsc_loc <- function(gr) {
 #' @param ucsc_loc A vector of UCSC-like genomic locations. Example: "chr1:152,548,974-152,550,854"
 #'
 #' @return a BED-like data.frame with chr, start, end, and strand (+)
+#' @export
 #'
 ucsc_loc_to_bed <- function(ucsc_loc) {
   chr <- sub(":.+","",ucsc_loc)
@@ -690,6 +696,7 @@ ucsc_loc_to_bed <- function(ucsc_loc) {
 #' @param bed A data.frame with columns chr, start, end, name, strand, and score.
 #'
 #' @return a character vector of UCSC browser locations
+#' @export
 #'
 bed_to_ucsc_loc <- function(bed) {
   paste0(bed$chr, ":",
