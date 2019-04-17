@@ -13,9 +13,9 @@ clusterApplyLB_chunks(N, n_chunks = 20, cl, FUN, ...)
 
 \item{cl}{A cluster object created by the parallel or snow package.}
 
-\item{FUN}{The function to run using clusterApplyLB()}
+\item{FUN}{The function to run using `clusterApplyLB()`}
 
-\item{...}{Additional parameters passed to clusterApplyLB()}
+\item{...}{Additional parameters passed to `clusterApplyLB()`}
 }
 \value{
 a list object with the outputs of FUN

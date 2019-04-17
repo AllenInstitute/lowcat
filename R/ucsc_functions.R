@@ -111,9 +111,9 @@ get_great_regions <- function(symbols = NULL,
   library(dplyr)
   library(rtracklayer)
 
-  session <- browserSession("UCSC")
+  session <- rtracklayer::browserSession("UCSC")
   genome(session) <- genome
-  refgene <- getTable(ucscTableQuery(session,table="refGene"))
+  refgene <- rtracklayer::getTable(rtracklayer::ucscTableQuery(session,table="refGene"))
   chromsizes <- read.table(paste0("http://hgdownload.cse.ucsc.edu/goldenPath/",genome,"/bigZips/",genome,".chrom.sizes"))
   names(chromsizes) <- c("chrom","max_chr_size")
 

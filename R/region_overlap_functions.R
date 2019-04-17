@@ -191,7 +191,7 @@ count_fragment_overlaps <- function(fragment_list,
           new_i <- which(GenomicRanges::countOverlaps(target_GRanges,fragment_list[[i]]) > 0)
           new_count <- length(new_i)
           out@x <- c(out@x, rep(1, new_count))
-          new_i <- new_i - 1 # 0-based indexing
+          new_i <- new_i - 1L # 0-based indexing
           out@i <- c(out@i, new_i)
           out@p[i+1] <- max(out@p) + new_count
         } else {
@@ -209,7 +209,7 @@ count_fragment_overlaps <- function(fragment_list,
           new_x <- ol[new_i]
 
           out@x <- c(out@x, new_x)
-          new_i <- new_i - 1 # 0-based indexing
+          new_i <- new_i - 1L # 0-based indexing
           out@i <- c(out@i, new_i)
           out@p[i+1] <- max(out@p) + new_count
         } else {

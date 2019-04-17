@@ -49,11 +49,12 @@ cat_update <- function(...) {
 #' @param N Variable passed to nodes running FUN
 #' @param n_chunks Number of chunks to use. Default = 20 (5% of N per chunk).
 #' @param cl A cluster object created by the parallel or snow package.
-#' @param FUN The function to run using clusterApplyLB()
-#' @param ... Additional parameters passed to clusterApplyLB()
+#' @param FUN The function to run using `clusterApplyLB()`
+#' @param ... Additional parameters passed to `clusterApplyLB()`
 #'
 #' @return a list object with the outputs of FUN
 #' @export
+#'
 clusterApplyLB_chunks <- function(N,
                                   n_chunks = 20,
                                   cl, FUN, ...) {
