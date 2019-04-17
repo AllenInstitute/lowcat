@@ -19,7 +19,8 @@ Imports:
     parallel (>= 3.4.3),
     purrr (>= 0.2.4),
     rbamtools (>= 2.16.0),
-    Rsamtools
+    Rsamtools,
+    rtracklayer
 RoxygenNote: 6.1.1
 Suggests: 
     testthat,
