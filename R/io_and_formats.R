@@ -301,9 +301,9 @@ filter_fragments <- function(fragment_list,
   for(i in 1:length(fragment_list)) {
     fragments <- fragment_list[[i]]
 
-    overlapping_fragments <- unique(GenomicRanges::queryHits(GenomicRanges::findOverlaps(fragments,
-                                                                                         filter_GR,
-                                                                                         ignore.strand = ignore_strand)))
+    overlapping_fragments <- unique(S4Vectors::queryHits(GenomicRanges::findOverlaps(fragments,
+                                                                                     filter_GR,
+                                                                                     ignore.strand = ignore_strand)))
 
     if(mode == "remove") {
       filtered_fragments <- fragments[-overlapping_fragments]
@@ -444,10 +444,10 @@ run_se_to_cuts_parallel <- function(bam_files,
   parallel::clusterEvalQ(cl, library(GenomicRanges))
   parallel::clusterEvalQ(cl, library(GenomicAlignments))
   parallel::clusterExport(cl, c("bam_files",
-                      "se_to_cuts",
-                      "se_to_cuts_parallel"),
-                # Use the function's local environment for export
-                envir = environment())
+                                "se_to_cuts",
+                                "se_to_cuts_parallel"),
+                          # Use the function's local environment for export
+                          envir = environment())
 
   N <- length(bam_files)
 
@@ -611,13 +611,12 @@ balance_fragment_clusters <- function(fragment_list,
 #' @export
 #'
 bed_to_GRanges <- function(bed) {
-  library(GenomicRanges)
 
-  gr <- GRanges(seqnames=bed$chr,
-                IRanges(start=bed$start,
-                        end=bed$end),
-                strand=bed$strand,
-                mcols=bed[,c("name","score")])
+  gr <- GenomicRanges::GRanges(seqnames=bed$chr,
+                               IRanges::IRanges(start=bed$start,
+                                                end=bed$end),
+                               strand=bed$strand,
+                               mcols=bed[,c("name","score")])
 
   return(gr)
 }
@@ -630,10 +629,10 @@ bed_to_GRanges <- function(bed) {
 #' @export
 #'
 GRanges_to_bed <- function(gr) {
-  bed <- data.frame(chr = seqnames(gr),
-                    start = start(gr),
-                    end = end(gr),
-                    strand = strand(gr))
+  bed <- data.frame(chr = GenomicRanges::seqnames(gr),
+                    start = GenomicRanges::start(gr),
+                    end = GenomicRanges::end(gr),
+                    strand = GenomicRanges::strand(gr))
 
   bed$chr <- as.character(bed$chr)
   bed$strand <- as.character(bed$strand)
@@ -654,9 +653,9 @@ ucsc_loc_to_GRanges <- function(ucsc_loc) {
   start_pos <- as.numeric(gsub(",","",start_pos))
   end_pos <- sub(".+-","",ucsc_loc)
   end_pos <- as.numeric(gsub(",","",end_pos))
-  GRanges(seqnames = chr,
-          IRanges(start_pos,end_pos),
-          strand = "+")
+  GenomicRanges::GRanges(seqnames = chr,
+                         IRanges::IRanges(start_pos,end_pos),
+                         strand = "+")
 }
 
 #' Convert GenomicRanges objects to a vector of UCSC browser locations.
@@ -667,9 +666,9 @@ ucsc_loc_to_GRanges <- function(ucsc_loc) {
 #' @export
 #'
 GRanges_to_ucsc_loc <- function(gr) {
-  paste0(seqnames(gr), ":",
-         prettyNum(start(gr), big.mark = ","), "-",
-         prettyNum(end(gr), big.mark = ","))
+  paste0(GenomicRanges::seqnames(gr), ":",
+         prettyNum(GenomicRanges::start(gr), big.mark = ","), "-",
+         prettyNum(GenomicRanges::end(gr), big.mark = ","))
 }
 
 #' Convert GenomicRanges to a bed-like data.frame

@@ -1,15 +1,16 @@
 library(lowcat)
 options(stringsAsFactors = FALSE)
 
+regions_file <- system.file("testdata/rda",
+                            "simple_regions.rda",
+                            package = "lowcat")
+
+load(regions_file)
+
 context("region type conversion")
 test_that(
   "GRanges_to_ucsc_loc converts correctly",
   {
-    regions_file <- system.file("testdata/rda",
-                                "simple_regions.rda",
-                                package = "lowcat")
-
-    load(regions_file)
 
     ucsc_conv1 <- GRanges_to_ucsc_loc(gr1)
     ucsc_conv2 <- GRanges_to_ucsc_loc(gr2)
@@ -23,19 +24,14 @@ test_that(
 test_that(
   "ucsc_loc_to_GRanges converts correctly",
   {
-    regions_file <- system.file("testdata/rda",
-                                "simple_regions.rda",
-                                package = "lowcat")
-
-    load(regions_file)
 
     gr_conv1 <- ucsc_loc_to_GRanges(ucsc1)
     gr_conv2 <- ucsc_loc_to_GRanges(ucsc2)
 
     gr_comp1 <- gr1
-    strand(gr_comp1) <- rep("+",4)
+    GenomicRanges::strand(gr_comp1) <- rep("+",4)
     gr_comp2 <- gr2
-    strand(gr_comp2) <- rep("+",4)
+    GenomicRanges::strand(gr_comp2) <- rep("+",4)
 
     expect_identical(gr_conv1, gr_comp1)
     expect_identical(gr_conv2, gr_comp2)
@@ -46,11 +42,6 @@ test_that(
 test_that(
   "GRanges_to_bed converts correctly",
   {
-    regions_file <- system.file("testdata/rda",
-                                "simple_regions.rda",
-                                package = "lowcat")
-
-    load(regions_file)
 
     bed_conv1 <- GRanges_to_bed(gr1)
     bed_conv2 <- GRanges_to_bed(gr2)
@@ -93,11 +84,6 @@ context("filtering regions")
 test_that(
   "filter_fragments() correctly removes regions",
   {
-    regions_file <- system.file("testdata/rda",
-                                "simple_regions.rda",
-                                package = "lowcat")
-
-    load(regions_file)
 
     filtered <- suppressWarnings(
       filter_fragments(fragment_list = list(gr1),
@@ -126,11 +112,6 @@ test_that(
 test_that(
   "filter_fragments() correctly retains regions",
   {
-    regions_file <- system.file("testdata/rda",
-                                "simple_regions.rda",
-                                package = "lowcat")
-
-    load(regions_file)
 
     filtered <- suppressWarnings(
       filter_fragments(fragment_list = list(gr1),

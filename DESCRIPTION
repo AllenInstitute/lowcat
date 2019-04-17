@@ -1,18 +1,19 @@
 Package: lowcat
 Type: Package
 Title: Low Coverage Accessibility and Transcriptomics
-Version: 0.1.0
+Version: 0.1.1
 Author: Lucas T. Graybuck <lucasg@alleninstitute.org>
 Maintainer: Lucas T. Graybuck <lucasg@alleninstitute.org>
 Description: Functions for clustering low-coverage chromatin accessibility data, and for comparisons between accessibility and transcriptomics data.
 License: See file LICENSE
 Encoding: UTF-8
 LazyData: true
+Requires:
+    dplyr (>= 0.7.4),
+    GenomicRanges
 Imports:
     data.table (>= 1.10.4-3),
-    dplyr (>= 0.7.4),
     GenomicAlignments,
-    GenomicRanges,
     IRanges,
     Matrix,
     parallel (>= 3.4.3),
