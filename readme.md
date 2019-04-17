@@ -2,6 +2,14 @@
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Rusty-spotted_cat_%28f._rubiginosa%29.JPG" alt="Rusty-spotted lowcat" width="300px"/>
 
+[![Master status](https://travis-ci.org/AllenInstitute/lowcat.svg?branch=master)](https://travis-ci.org/AllenInstitute/lowcat)
+[![Master coverage](https://codecov.io/gh/AllenInstitute/lowcat/branch/master/graph/badge.svg)](https://codecov.io/github/AllenInstitute/lowcat?branch=master)
+
+
+[![Dev status](https://travis-ci.org/AllenInstitute/lowcat.svg?branch=dev)](https://travis-ci.org/AllenInstitute/lowcat)
+[![Dev coverage](https://codecov.io/gh/AllenInstitute/lowcat/branch/master/graph/badge.svg)](https://codecov.io/github/AllenInstitute/lowcat?branch=dev)
+
+
 ## Description
 
 lowcat is a collection of functions for reading, comparing, clustering, and identifying 
