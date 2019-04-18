@@ -7,7 +7,7 @@ Master: [![Master status](https://travis-ci.org/AllenInstitute/lowcat.svg?branch
 
 
 Dev: [![Dev status](https://travis-ci.org/AllenInstitute/lowcat.svg?branch=dev)](https://travis-ci.org/AllenInstitute/lowcat)
-[![Dev coverage](https://codecov.io/gh/AllenInstitute/lowcat/branch/master/graph/badge.svg)](https://codecov.io/github/AllenInstitute/lowcat?branch=dev)
+[![Dev coverage](https://codecov.io/gh/AllenInstitute/lowcat/branch/dev/graph/badge.svg)](https://codecov.io/github/AllenInstitute/lowcat?branch=dev)
 
 
 ## Description
