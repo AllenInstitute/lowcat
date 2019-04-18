@@ -349,6 +349,27 @@ collapse_fragment_list <- function(fragment_list,
 
 }
 
+#' Merge a list of GenomicRanges objects to a single, merged GenomicRanges object
+#'
+#' @param fragment_list The list object containing GenomicRanges objects
+#'
+#' @return A GenomicRanges object containing merged regions.
+#' @export
+merge_fragment_list <- function(fragment_list) {
+
+  out_GRanges <- fragment_list[[1]]
+
+  for(i in 2:length(fragment_list)) {
+
+    merged_ranges <- c(out_GRanges, fragment_list[[i]])
+    out_GRanges <- reduce(merged_ranges)
+
+  }
+
+  out_GRanges
+
+}
+
 
 #' Linking function for running pe_to_frag in parallel mode.
 #'
@@ -472,108 +493,22 @@ run_se_to_cuts_parallel <- function(bam_files,
 #'
 #' @param bam_files a character vector listing all of the BAM files to merge
 #' @param out_file the target BAM file to write to
-#' @param make_indexes whether or not to make indexes for the input files. Default is FALSE
-#' @param sort_out_file whether or not to sort the output file. default is TRUE, which will force index_out_file to TRUE.
 #' @param index_out_file whether or not to index the output file. Default is TRUE.
-#' @param keep_unsorted If sort_out_file == TRUE, whether or not to keep the original, unsorted file. Default is FALSE.
 #'
 #' @export
+#'
 merge_bam_files <- function(bam_files,
                             out_file,
-                            make_indexes = FALSE,
-                            sort_out_file = TRUE,
-                            index_out_file = TRUE,
-                            keep_unsorted = FALSE) {
+                            index_out_file = TRUE) {
 
-  library(rbamtools)
+  Rsamtools::mergeBam(bam_files, out_file)
 
-  l_exist <- file.exists(bam_files)
-  n_exist <- sum(l_exist)
-  n_missing <- sum(!l_exist)
-
-  l_indexed <- file.exists(paste0(bam_files,".bai"))
-  n_indexed <- sum(l_indexed)
-  n_no_index <- sum(!l_indexed)
-
-  # Check for files and indexes
-  if(n_exist < length(bam_files)) {
-    stop(paste0("Can't find", n_missing ," bam files: ", paste(bam_files[!l_exist], collapse = ", ")))
-  }
-  if(n_indexed < length(bam_files)) {
-    if(make_indexes) {
-      print("Missing ", n_no_index, " indexes. These will be generated.")
-    } else {
-      stop(paste0("Can't find", n_no_index ," bam indexes (bam.bai): ", paste(paste0(bam_files[!l_indexed],".bai"), collapse = ", "), ". Use make_indexes = TRUE to generate them on the fly."))
-    }
-  }
-
-  # Get header from first file
-  bam1 <- bamReader(bam_files[1])
-  header <- getHeader(bam1)
-  bamClose(bam1)
-
-  # Initialize the new file
-  out <- bamWriter(header, out_file)
-
-  for(i in 1:length(bam_files)) {
-    # Open each bam
-    bam <- bamReader(bam_files[i])
-
-    # If an index doesn't exist, make one
-    index_file <- paste0(bam_files[i],".bai")
-    if(!l_indexed[i]) {
-      createIndex(bam, index_file)
-    }
-
-    # Load Index
-    loadIndex(bam, index_file)
-
-    # Get all chromosomes
-    refs <- getRefData(bam)
-    for(j in 1:nrow(refs)) {
-      # Get coords for each chromosome
-      coords <- getRefCoords(bam, refs$SN[j])
-      # Convert to bamRange
-      range <- bamRange(bam, coords)
-      # Write each chr to out.
-      bamSave(out, range)
-    }
-
-    bamClose(bam)
-  }
-
-  bamClose(out)
-
-  if(sort_out_file | index_out_file) {
-    print(paste0("Sorting ",out_file,". (Required for indexing)"))
-    out <- bamReader(out_file)
-    sort_prefix <- sub(".bam$",".srt",out_file)
-    sort_prefix <- sub(".+/","",sort_prefix)
-
-    bamSort(out, prefix = sort_prefix)
-    bamClose(out)
-
-    if(!keep_unsorted) {
-      file.remove(out_file)
-      file.rename(sub(".bam$",".srt.bam",out_file), out_file)
-    }
-
-    if(index_out_file) {
-      if(keep_unsorted) {
-        out <- bamReader(sub(".bam$",".srt.bam",out_file))
-        createIndex(out, paste0(sub(".bam$",".srt.bam",out_file),".bai"))
-        bamClose(out)
-      } else {
-        out <- bamReader(out_file)
-        createIndex(out, paste0(out_file,".bai"))
-        bamClose(out)
-      }
-
-    }
-
+  if(index_out_file) {
+    Rsamtools::indexBam(out_file)
   }
 
 }
+
 
 #' Downsample fragments within cluster sets to match the sample with the lowest number of fragments
 #'

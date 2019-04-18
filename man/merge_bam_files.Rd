@@ -4,21 +4,14 @@
 \alias{merge_bam_files}
 \title{Merge multiple BAM files to a single output BAM file}
 \usage{
-merge_bam_files(bam_files, out_file, make_indexes = FALSE,
-  sort_out_file = TRUE, index_out_file = TRUE, keep_unsorted = FALSE)
+merge_bam_files(bam_files, out_file, index_out_file = TRUE)
 }
 \arguments{
 \item{bam_files}{a character vector listing all of the BAM files to merge}
 
 \item{out_file}{the target BAM file to write to}
 
-\item{make_indexes}{whether or not to make indexes for the input files. Default is FALSE}
-
-\item{sort_out_file}{whether or not to sort the output file. default is TRUE, which will force index_out_file to TRUE.}
-
 \item{index_out_file}{whether or not to index the output file. Default is TRUE.}
-
-\item{keep_unsorted}{If sort_out_file == TRUE, whether or not to keep the original, unsorted file. Default is FALSE.}
 }
 \description{
 Merge multiple BAM files to a single output BAM file
