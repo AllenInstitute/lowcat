@@ -6,4 +6,7 @@ sudo: false
 
 cache: packages
 
-bioc_packages: GenomicRanges,Rsamtools,rtracklayer
+bioc_packages:
+  - GenomicRanges
+  - Rsamtools
+  - rtracklayer
