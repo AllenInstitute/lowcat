@@ -181,7 +181,8 @@ read_multiplexed_paired_bam <- function(bam,
 downsample_fragments <- function(fragment_list,
                                  downsample_n = 1e4,
                                  discard_if_too_few = TRUE,
-                                 seed = 42) {
+                                 seed = 42,
+                                 verbose = TRUE) {
 
   out_list <- vector("list",length(fragment_list))
 
@@ -193,7 +194,12 @@ downsample_fragments <- function(fragment_list,
 
   fragment_gt_downsample <- which(fragment_counts >= downsample_n)
 
-  print(paste("Downsampling to",downsample_n,".",length(fragment_gt_downsample),"of",length(fragment_list),"have >",downsample_n,"."))
+  if(verbose) {
+    ds_message <- paste("Downsampling to",downsample_n,".",length(fragment_gt_downsample),"of",length(fragment_list),"have >",downsample_n,".        ")
+
+    cat("\r",ds_message)
+    flush.console()
+  }
 
   set.seed(seed)
 
@@ -523,7 +529,7 @@ balance_fragment_clusters <- function(fragment_list,
                                       clusters) {
   unique_clusters <- unique(clusters)
 
-  balanced_fragments <- map(clusters,
+  balanced_fragments <- map(unique_clusters,
                             function(this_cluster) {
                               cluster_fragments <- fragment_list[clusters == this_cluster]
                               min_fragments <- min(map_int(cluster_fragments, length))
