@@ -5,7 +5,7 @@
 \title{Equally downsample a list of GenomicRanges objects}
 \usage{
 downsample_fragments(fragment_list, downsample_n = 10000,
-  discard_if_too_few = TRUE, seed = 42)
+  discard_if_too_few = TRUE, seed = 42, verbose = TRUE)
 }
 \arguments{
 \item{fragment_list}{The list object containing GenomicRanges objects}

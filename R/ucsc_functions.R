@@ -8,6 +8,7 @@
 #' @param genome The genome to use. Default is "mm10".
 #'
 #' @return a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
+#' @export
 get_tss_regions <- function(symbols = NULL,
                             expand = 5000,
                             genome = "mm10") {
@@ -53,6 +54,7 @@ get_tss_regions <- function(symbols = NULL,
 #' @param genome The genome to use. Default is "mm10".
 #'
 #' @return a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
+#' @export
 get_gene_bodies <- function(symbols = NULL,
                             expand = 0,
                             genome = "mm10") {
@@ -104,6 +106,7 @@ get_gene_bodies <- function(symbols = NULL,
 #' @param genome The genome to use. Default is "mm10".
 #'
 #' @return a data.frame with columns matching BED format (chr, start, end, name, score, and strand).
+#' @export
 get_great_regions <- function(symbols = NULL,
                               minexpand = 5000,
                               maxexpand = 1e6,
