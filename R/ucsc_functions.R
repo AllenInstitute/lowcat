@@ -13,11 +13,10 @@ get_tss_regions <- function(symbols = NULL,
                             expand = 5000,
                             genome = "mm10") {
   library(dplyr)
-  library(rtracklayer)
 
-  session <- browserSession("UCSC")
+  session <- rtracklayer::browserSession("UCSC")
   genome(session) <- genome
-  refgene <- getTable(ucscTableQuery(session,table="refGene"))
+  refgene <- rtracklayer::getTable(rtracklayer::ucscTableQuery(session,table="refGene"))
 
   if(length(expand) == 1) {
     expand5 <- expand
@@ -59,11 +58,10 @@ get_gene_bodies <- function(symbols = NULL,
                             expand = 0,
                             genome = "mm10") {
   library(dplyr)
-  library(rtracklayer)
 
-  session <- browserSession("UCSC")
+  session <- rtracklayer::browserSession("UCSC")
   genome(session) <- genome
-  refgene <- getTable(ucscTableQuery(session,table="refGene"))
+  refgene <- rtracklayer::getTable(rtracklayer::ucscTableQuery(session,table="refGene"))
 
   if(length(expand) == 1) {
     expand5 <- expand
@@ -112,7 +110,6 @@ get_great_regions <- function(symbols = NULL,
                               maxexpand = 1e6,
                               genome = "mm10") {
   library(dplyr)
-  library(rtracklayer)
 
   session <- rtracklayer::browserSession("UCSC")
   genome(session) <- genome
