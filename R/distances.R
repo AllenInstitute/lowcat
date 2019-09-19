@@ -68,7 +68,7 @@ overlap_jaccard_df <- function(fragment_list,
 
     parallel::clusterEvalQ(cl, library(GenomicRanges))
     parallel::clusterExport(cl, c("index_pairs","fragment_list",
-                                  "fragment_overlap_jaccard_parallel"),
+                                  "overlap_jaccard_mat_fun"),
                             # Use the function's local environment for export
                             envir = environment())
 
@@ -151,7 +151,7 @@ overlap_jaccard_mat <- function(fragment_list,
     parallel::clusterEvalQ(cl, library(GenomicRanges))
     parallel::clusterExport(cl, c("index_pairs","fragment_list",
                                   "fragment_lengths",
-                                  "fragment_overlap_jaccard_parallel"),
+                                  "overlap_jaccard_mat_fun"),
                             # Use the function's local environment for export
                             envir = environment())
 
@@ -265,7 +265,7 @@ window_jaccard_df <- function(window_list,
 
     parallel::clusterExport(cl,
                             c("index_pairs","window_list",
-                              "window_overlap_jaccard_parallel"),
+                              "window_jaccard_df_fun"),
                             # Use the function's local environment for export
                             envir = environment())
 
