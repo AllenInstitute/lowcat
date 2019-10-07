@@ -9,7 +9,7 @@ clusterApplyLB_chunks(N, n_chunks = 20, cl, FUN, ...)
 \arguments{
 \item{N}{Variable passed to nodes running FUN}
 
-\item{n_chunks}{Number of chunks to use. Default = 20 (5% of N per chunk).}
+\item{n_chunks}{Number of chunks to use. Default = 20 (5\% of N per chunk).}
 
 \item{cl}{A cluster object created by the parallel or snow package.}
 
